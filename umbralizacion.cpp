@@ -82,28 +82,29 @@ void verMatrizUmbralizada(int x1, int x2, int y1, int y2, vector<vector<char>> m
 
 
 int main(int argc, char* argv[]){
-    if (argc != 2) {
-        cerr << "Uso: " << argv[0] << " <nombre_del_archivo.bmp>" << endl;
+    if (argc != 3) {
+        cerr << "Uso: " << argv[0] << " <nombre_del_archivo.bmp> <umbral(0-255)>" << endl;
         return {};
     }
 
     vector<vector<Pixel>> matriz = generarMatrizDeArchivo(argv[1]);
+    int umbral = atoi(argv[2]);
 
     // Multiprocesada iterando filas
     double start = omp_get_wtime();
-    vector<vector<char>> matrizUmbralizadaCol  = umbralizarMP(matriz, 100);  
+    vector<vector<char>> matrizUmbralizadaCol  = umbralizarMP(matriz, umbral);  
     double end = omp_get_wtime();
     cout << "Tiempo de ejecución (MP COL): " << end - start << " segundos" << endl;
 
     // Iterando columnas y no filas
     start = omp_get_wtime();
-    vector<vector<char>> matrizUmbralizadaFil = umbralizarMP2(matriz, 100);
+    vector<vector<char>> matrizUmbralizadaFil = umbralizarMP2(matriz, umbral);
     end = omp_get_wtime();
     cout << "Tiempo de ejecución (MP FIL): " << end - start << " segundos" << endl;
 
     // Secuencial (sin OpenMP)
     start = omp_get_wtime();
-    vector<vector<char>> matrizUmbralizadaSec = umbralizarSec(matriz, 100); 
+    vector<vector<char>> matrizUmbralizadaSec = umbralizarSec(matriz, umbral); 
     end = omp_get_wtime();
     cout << "Tiempo de ejecución (Secuencial): " << end - start << " segundos" << endl;
 
