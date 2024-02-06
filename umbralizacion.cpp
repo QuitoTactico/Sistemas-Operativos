@@ -91,15 +91,15 @@ int main(int argc, char* argv[]){
 
     // Multiprocesada iterando filas
     double start = omp_get_wtime();
-    vector<vector<char>> matrizUmbralizadaMP  = umbralizarMP(matriz, 100);  
+    vector<vector<char>> matrizUmbralizadaCol  = umbralizarMP(matriz, 100);  
     double end = omp_get_wtime();
-    cout << "Tiempo de ejecución (MP): " << end - start << " segundos" << endl;
+    cout << "Tiempo de ejecución (MP COL): " << end - start << " segundos" << endl;
 
     // Iterando columnas y no filas
     start = omp_get_wtime();
-    vector<vector<char>> matrizUmbralizadaMP2 = umbralizarMP2(matriz, 100);
+    vector<vector<char>> matrizUmbralizadaFil = umbralizarMP2(matriz, 100);
     end = omp_get_wtime();
-    cout << "Tiempo de ejecución (MP2): " << end - start << " segundos" << endl;
+    cout << "Tiempo de ejecución (MP FIL): " << end - start << " segundos" << endl;
 
     // Secuencial (sin OpenMP)
     start = omp_get_wtime();
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
     cout << "Tiempo de ejecución (Secuencial): " << end - start << " segundos" << endl;
 
     verMatriz(100, 105, 200, 205, matriz);
-    verMatrizUmbralizada(100, 105, 200, 205, matrizUmbralizadaMP);
+    verMatrizUmbralizada(100, 105, 200, 205, matrizUmbralizadaCol);
 
     return 0;
 }
