@@ -7,6 +7,8 @@
 
 using namespace std;
 
+namespace leerImagenFileExport{
+
 // Definición de la estructura Pixel
 struct Pixel {
     unsigned char blue;
@@ -89,4 +91,7 @@ vector<vector<Pixel>> generarMatrizDeArchivo(char argv[]) {
     vector<vector<Pixel>> matriz = leerArchivoBMP(argv);
 
     return matriz;
+}
+
+
 }
