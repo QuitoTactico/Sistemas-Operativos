@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 
 
 
-    guardarMatrizEnBMP("sumaImagenes.bmp", imagenesSumadas);
+    guardarMatrizEnBMP("suma_imgs.bmp", imagenesSumadas);
 
     return 0;
 }
