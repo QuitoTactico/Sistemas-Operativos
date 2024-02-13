@@ -1,4 +1,4 @@
-// g++ umbralizacion.cpp -fopenmp -o umbralizacion
+// g++ umbralizacion.cpp -fopenmp -o umbralizacion,out
 // ./umbralizacion <nombre_del_archivo.bmp>
 
 #include <iostream>
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]){
     verMatriz(100, 105, 200, 205, matriz);
     verMatriz(100, 105, 200, 205, matrizUmbralizadaSec);
 
-    guardarMatrizEnBMP("umbralizacionPixelOutput.bmp", matrizUmbralizadaSec);
+    guardarMatrizEnBMP("umbralizacionPixel.bmp", matrizUmbralizadaSec);
 
 
     return 0;
