@@ -37,14 +37,22 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
     double nuevoCentroX = nuevoAncho / 2.0;
     double nuevoCentroY = nuevoAlto / 2.0;
 
-    // Itera sobre cada pixel en la nueva imagen
+    // Itera sobre cada pixel de la nueva imagen
     for (int y = 0; y < nuevoAlto; y++) {
         for (int x = 0; x < nuevoAncho; x++) {
-            // Mapea el pixel en la nueva imagen de vuelta a la imagen original usando una transformación de rotación
-            int viejoX = centroX + (x - nuevoCentroX) * cos(rad) + (y - nuevoCentroY) * sin(rad); //Matriz de rotación: cos(angulo) sin(angulo) 
-            int viejoY = centroY + (x - nuevoCentroX) * (-sin(rad)) + (y - nuevoCentroY) * cos(rad);//                     -sin(angulo) cos(angulo)
+            
+            // Matriz de rotación simplificada (2x2): 
+            // ------------------------------
+            // |  cos(angulo) | sin(angulo) | 
+            // |----------------------------|
+            // | -sin(angulo) | cos(angulo) |
+            // ------------------------------
 
-            // Si la ubicación mapeada cae dentro de los límites de la imagen original, usa el valor del pixel de la imagen original
+            // Para cada pixel en la nueva imagen, busca cuál sería la posición de ese pixel en la imagen original, haciendo todo el proceso al contrario
+            int viejoX = centroX +  (x - nuevoCentroX) *   cos(-rad)  + (y - nuevoCentroY) * sin(-rad) ; 
+            int viejoY = centroY +  (x - nuevoCentroX) * (-sin(-rad)) + (y - nuevoCentroY) * cos(-rad) ;
+
+            // Si la ubicación en el pixel original cae dentro de los límites (de la original), usa el valor de esa posición en el nuevo pixel
             if (viejoX >= 0 && viejoX < ancho && viejoY >= 0 && viejoY < alto) {
                 imagenRotada[y][x] = imagen[viejoY][viejoX];
             }
@@ -69,7 +77,7 @@ int main(int argc, char* argv[]) {
     const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivo);
 
     int opcion;
-    cout << "1. Rotar la imagen \n2. Cizallar la imagen\n" ;
+    cout << "1. Rotar la imagen (Horariamente) \n2. Cizallar la imagen en x (Arriba hacia la derecha)\n" ;
     cin >> opcion;
 
     if(opcion == 1){
