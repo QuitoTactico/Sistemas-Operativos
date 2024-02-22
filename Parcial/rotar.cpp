@@ -1,6 +1,7 @@
 #include <iostream>
 #include "ioBMPExport.cpp"
 #include <cmath>
+using namespace std;
 
 vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
@@ -47,6 +48,13 @@ int main(int argc, char* argv[]) {
         cerr << "Uso: " << argv[0] << "<nombre_del_archivo_entrada.bmp> <angulo (0 - 359)>" << endl;
         return 1;
     }
+
     const char* nombreArchivoLecturaBMP = argv[1];
     const int angulo = atoi(argv[2]);
+
+    const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivoLecturaBMP);
+    const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo);
+
+    guardarMatrizEnBMP("rotar.bmp", imagenRotada);
+    return 0;
 }
