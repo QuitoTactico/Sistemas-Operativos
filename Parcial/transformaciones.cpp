@@ -3,6 +3,21 @@
 #include <cmath>
 using namespace std;
 
+vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
+    // Convierte el ángulo de grados a radianes
+    double rad = angulo * M_PI / 180.0;
+
+    // Calcula el tamaño de la nueva imagen
+    int ancho = imagen[0].size();
+    int alto = imagen.size();
+    int nuevoAncho = abs(ancho + alto * tan(rad));
+
+    // Crea la nueva imagen
+    vector<vector<Pixel>> imagenRotada(alto, vector<Pixel>(nuevoAncho));
+
+    return imagenRotada;
+}
+
 vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
     double rad = angulo * M_PI / 180.0;
@@ -27,7 +42,7 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
         for (int x = 0; x < nuevoAncho; x++) {
             // Mapea el pixel en la nueva imagen de vuelta a la imagen original usando una transformación de rotación
             int viejoX = centroX + (x - nuevoCentroX) * cos(rad) + (y - nuevoCentroY) * sin(rad); //Matriz de rotación: cos(angulo) sin(angulo) 
-            int viejoY = centroY - (x - nuevoCentroX) * sin(rad) + (y - nuevoCentroY) * cos(rad);//                     -sin(angulo) cos(angulo)
+            int viejoY = centroY + (x - nuevoCentroX) * (-sin(rad)) + (y - nuevoCentroY) * cos(rad);//                     -sin(angulo) cos(angulo)
 
             // Si la ubicación mapeada cae dentro de los límites de la imagen original, usa el valor del pixel de la imagen original
             if (viejoX >= 0 && viejoX < ancho && viejoY >= 0 && viejoY < alto) {
@@ -49,12 +64,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const char* nombreArchivoLecturaBMP = argv[1];
+    const char* nombreArchivo = argv[1];
     const int angulo = atoi(argv[2]);
+    const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivo);
 
-    const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivoLecturaBMP);
-    const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo);
+    int opcion;
+    cout << "1. Rotar la imagen \n2. Cizallar la imagen\n" ;
+    cin >> opcion;
 
-    guardarMatrizEnBMP("rotar.bmp", imagenRotada);
+    if(opcion == 1){
+        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "rotar.bmp" << "\nÁngulo: " << angulo;
+
+        const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo);
+
+        guardarMatrizEnBMP("rotar.bmp", imagenRotada);
+    }else if(opcion == 2){
+        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "cizallar.bmp" << "\nÁngulo: " << angulo;
+
+        const vector<vector<Pixel>> imagenCizallada = cizallarImagen(imagen, angulo);
+
+        guardarMatrizEnBMP("rotar.bmp", imagenCizallada);
+    }else{
+        cout << "Qué le pasa pa";
+    }
+
+
     return 0;
 }
