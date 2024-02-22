@@ -3,22 +3,7 @@
 #include <cmath>
 using namespace std;
 
-vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
-    // Convierte el ángulo de grados a radianes
-    double rad = angulo * M_PI / 180.0;
-
-    // Calcula el tamaño de la nueva imagen
-    int ancho = imagen[0].size();
-    int alto = imagen.size();
-    int nuevoAncho = abs(ancho + alto * tan(rad));
-
-    // Crea la nueva imagen
-    vector<vector<Pixel>> imagenRotada(alto, vector<Pixel>(nuevoAncho));
-
-    return imagenRotada;
-}
-
-vector<vector<Pixel>> rotarImagen2(const vector<vector<Pixel>>& imagen, double angulo) {
+vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
     double rad = angulo * M_PI / 180.0;
 
@@ -60,7 +45,7 @@ vector<vector<Pixel>> rotarImagen2(const vector<vector<Pixel>>& imagen, double a
     return imagenRotada;
 }
 
-vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
+vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
     double rad = angulo * M_PI / 180.0;
 
@@ -108,6 +93,45 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
     return imagenRotada;
 }
 
+vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
+    // Convierte el ángulo de grados a radianes
+    double rad = angulo * M_PI / 180.0;
+
+    // Calcula el tamaño de la nueva imagen
+    int ancho = imagen[0].size();
+    int alto = imagen.size();
+    int nuevoAncho = ancho + abs(alto * tan(rad));
+
+    // Crea la nueva imagen
+    vector<vector<Pixel>> imagenCizallada(alto, vector<Pixel>(nuevoAncho, {0,0,0}));
+
+    // Calcula el centro de la imagen original y la nueva imagen
+    double centroX = ancho / 2.0;
+    double centroY = alto / 2.0;
+    double nuevoCentroX = nuevoAncho / 2.0;
+
+    // Itera sobre cada pixel de la antigua imagen
+    for (int y = 0; y < alto; y++) {
+        for (int x = 0; x < ancho; x++) {
+            
+            // Matriz de rotación simplificada (2x2): 
+            // -----------------------------
+            // |      1      | tan(angulo) | 
+            // |---------------------------|
+            // |      0      |      1      |
+            // -----------------------------
+
+            // Para cada pixel en la vieja imagen, busca cuál sería la posición de ese pixel en la imagen nueva
+            int nuevoX = ((x - centroX) + (y - centroY) * tan(rad)) + nuevoCentroX; 
+
+            
+            imagenCizallada[y][nuevoX] = imagen[y][x];
+        }
+    }
+
+    return imagenCizallada;
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         cerr << "Uso: " << argv[0] << "<nombre_del_archivo_entrada.bmp> <angulo (0 - 359)>" << endl;
@@ -115,28 +139,38 @@ int main(int argc, char* argv[]) {
     }
 
     const char* nombreArchivo = argv[1];
-    const int angulo = atoi(argv[2]);
+    int angulo = atoi(argv[2]);
     const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivo);
+
+    while(true){
+        if(angulo >= 0){
+            break;
+        }else{
+            angulo = angulo + 360;
+        }
+    }
 
     int opcion;
     cout << "1. Rotar la imagen (Horariamente)\n2. Cizallar la imagen en x (Arriba hacia la derecha)\n" ;
     cin >> opcion;
 
-    if(opcion == 1){
-        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "rotar.bmp" << "\nÁngulo: " << angulo;
+    if(opcion == 1){  // Rotar
+        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "rotar.bmp - rotarInversa.bmp" << "\nÁngulo: " << angulo;
 
         const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo);
         guardarMatrizEnBMP("rotar.bmp", imagenRotada);
 
-        const vector<vector<Pixel>> imagenRotada2 = rotarImagen2(imagen, angulo);
-        guardarMatrizEnBMP("rotar2.bmp", imagenRotada2);
-    }else if(opcion == 2){
+        const vector<vector<Pixel>> imagenRotadaInversa = rotarImagenInversa(imagen, angulo);
+        guardarMatrizEnBMP("rotarInversa.bmp", imagenRotadaInversa);
+
+    }
+    else if(opcion == 2){  // Cizallar
         cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "cizallar.bmp" << "\nÁngulo: " << angulo;
 
         const vector<vector<Pixel>> imagenCizallada = cizallarImagen(imagen, angulo);
+        guardarMatrizEnBMP("cizallar.bmp", imagenCizallada);
 
-        guardarMatrizEnBMP("rotar.bmp", imagenCizallada);
-    }else{
+    }else{ // Opción inválida
         cout << "Qué le pasa pa";
     }
 
