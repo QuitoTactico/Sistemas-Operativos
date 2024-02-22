@@ -1,9 +1,12 @@
 #include <iostream>
 #include "ioBMPExport.cpp"
 #include <cmath>
+#include <omp.h>
 using namespace std;
 
 vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
+    
+
     // Convierte el ángulo de grados a radianes
     double rad = angulo * M_PI / 180.0;
 
@@ -22,7 +25,10 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
     double nuevoCentroX = nuevoAncho / 2.0;
     double nuevoCentroY = nuevoAlto / 2.0;
 
+    int nuevoX, nuevoY;
+
     // Itera sobre cada pixel de la antigua imagen
+    #pragma omp parallel
     for (int y = 0; y < alto; y++) {
         for (int x = 0; x < ancho; x++) {
             
@@ -34,16 +40,20 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
             // ------------------------------
 
             // Para cada pixel en la vieja imagen, busca cuál sería la posición de ese pixel en la imagen nueva
-            int nuevoX = ((x - centroX) *   cos(rad)  + (y - centroY) * sin(rad)) + nuevoCentroX; 
-            int nuevoY = ((x - centroX) * (-sin(rad)) + (y - centroY) * cos(rad)) + nuevoCentroY;
+            nuevoX = ((x - centroX) *   cos(rad)  + (y - centroY) * sin(rad)) + nuevoCentroX; 
+            nuevoY = ((x - centroX) * (-sin(rad)) + (y - centroY) * cos(rad)) + nuevoCentroY;
 
-            
-            imagenRotada[nuevoY][nuevoX] = imagen[y][x];
+            // Si la ubicación en el pixel nuevo cae dentro de los límites, usa el valor de la posicion del original en el nuevo pixel
+            if (nuevoX >= 0 && nuevoX < nuevoAncho && nuevoY >= 0 && nuevoY < nuevoAlto) {
+                imagenRotada[nuevoY][nuevoX] = imagen[y][x];
+            }
+
         }
     }
 
     return imagenRotada;
 }
+
 
 vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
@@ -65,6 +75,7 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
     double nuevoCentroY = nuevoAlto / 2.0;
 
     // Itera sobre cada pixel de la nueva imagen
+    #pragma omp parallel
     for (int y = 0; y < nuevoAlto; y++) {
         for (int x = 0; x < nuevoAncho; x++) {
             
@@ -93,6 +104,7 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
     return imagenRotada;
 }
 
+
 vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
     double rad = angulo * M_PI / 180.0;
@@ -111,6 +123,7 @@ vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double
     double nuevoCentroX = nuevoAncho / 2.0;
 
     // Itera sobre cada pixel de la antigua imagen
+    #pragma omp parallel
     for (int y = 0; y < alto; y++) {
         for (int x = 0; x < ancho; x++) {
             
@@ -151,18 +164,18 @@ int main(int argc, char* argv[]) {
     }
 
     int opcion;
-    cout << "1. Rotar la imagen (Horariamente)\n2. Cizallar la imagen en x (Arriba hacia la derecha)\n" ;
+    cout << "1. -Rotar la imagen (Horariamente)\n   -Rotar la imagen pero haciendo el procedimiento a la inversa (iterando en la nueva)\n2. Cizallar la imagen en x (Arriba hacia la derecha)\n" ;
     cin >> opcion;
 
-    if(opcion == 1){  // Rotar
+
+    if(opcion == 1){  // Rotar normal
         cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "rotar.bmp - rotarInversa.bmp" << "\nÁngulo: " << angulo;
 
-        const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo);
+        const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo); 
         guardarMatrizEnBMP("rotar.bmp", imagenRotada);
 
         const vector<vector<Pixel>> imagenRotadaInversa = rotarImagenInversa(imagen, angulo);
         guardarMatrizEnBMP("rotarInversa.bmp", imagenRotadaInversa);
-
     }
     else if(opcion == 2){  // Cizallar
         cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "cizallar.bmp" << "\nÁngulo: " << angulo;
@@ -173,7 +186,6 @@ int main(int argc, char* argv[]) {
     }else{ // Opción inválida
         cout << "Qué le pasa pa";
     }
-
 
     return 0;
 }
