@@ -215,6 +215,7 @@ int main(int argc, char* argv[]) {
     int angulo = atoi(argv[2]);
     const vector<vector<Pixel>> imagen = leerArchivoBMP(nombreArchivo);
 
+    // Para evitar posibles errores con ángulos negativos, convertimos el ángulo a su equivalente positivo.
     while(true){
         if(angulo >= 0){
             break;
@@ -224,7 +225,10 @@ int main(int argc, char* argv[]) {
     }
 
     int opcion;
-    cout << "1. -Rotar la imagen (Horariamente)\n   -Rotar la imagen pero haciendo el procedimiento a la inversa (iterando en la nueva)\n2. Cizallar la imagen en x (Arriba hacia la derecha)\n3. Hacer ambas cosas\n" ;
+    cout << "1. -Rotar la imagen (Horariamente)\n" ;
+    cout << "   -Rotar la imagen pero haciendo el procedimiento a la inversa (iterando en la nueva)\n";
+    cout << "2. Cizallar la imagen en x (Arriba hacia la derecha)\n";
+    cout << "3. Hacer ambas cosas\n";
     cin >> opcion;
 
 
