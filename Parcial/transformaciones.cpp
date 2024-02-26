@@ -149,7 +149,8 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
     Cada pixel de la vieja pinta uno en la nueva. A cada pixel de la nueva le corresponde
     sólo un pixel de la vieja, como en la rotación normal.
     En este caso no queda un patrón de píxeles negros al interior de la imagen, ya que el redondeo
-    sólo mueve los píxeles hacia la derecha, no desgarra (separar hacia lados opuestos o en diferentes ejes).
+    sólo mueve los píxeles horizontalmente, pero de forma que sigan siendo contínuos/vecinos, no desgarra
+    (separar hacia lados opuestos o en diferentes ejes).
 */
 vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double angulo) {
     // Convierte el ángulo de grados a radianes
