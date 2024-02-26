@@ -1,6 +1,8 @@
 #include <iostream>
 #include "ioBMPExport.cpp"
-#include <cmath>
+#include <cmath>  
+#include <ctime>
+#include <chrono> 
 #include <omp.h>
 using namespace std;
 
@@ -39,11 +41,16 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
     double nuevoCentroX = nuevoAncho / 2.0;
     double nuevoCentroY = nuevoAlto / 2.0;
 
-    // Esto estaba causando el patrón chistoso en los bordes jajjs
-    //int nuevoX, nuevoY;
+    /* Esto estaba causando el patrón chistoso en los bordes jajjs (ver en "distorsionado.bmp")
+       Si definimos desde antes las variables en donde se guardarán los cálculos,
+       los resultados de una iteración van a interferir y sobreescribir los de otra.
+       Una iteración accedería en la matriz a su nuevoY, pero al nuevoX que otra calculó.
+       Ya que nuevoX se calcula primero, es más probable que solo él sea sobreescrito.
+       Por eso la imagen se distorsionaba hacia los lados y no hacia arriba y abajo. */
+    //int nuevoX, nuevoY;    <---- maaaaal, muy maaaaaaaaaaal
 
     // Itera sobre cada pixel de la antigua imagen
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int y = 0; y < alto; y++) {
         for (int x = 0; x < ancho; x++) {
             
@@ -106,7 +113,7 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
     double nuevoCentroY = nuevoAlto / 2.0;
 
     // Itera sobre cada pixel de la nueva imagen
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int y = 0; y < nuevoAlto; y++) {
         for (int x = 0; x < nuevoAncho; x++) {
             
@@ -116,6 +123,7 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
             // |------------------------------|
             // | -sin(-angulo) | cos(-angulo) |
             //  ------------------------------
+            // Simplemente es el ángulo pero negativo
 
             // Para cada pixel en la nueva imagen, busca cuál sería la posición de ese pixel en la imagen original, haciendo todo el proceso al contrario
             int viejoX = ((x - nuevoCentroX) *   cos(-rad)  + (y - nuevoCentroY) * sin(-rad)) + centroX ; 
@@ -170,7 +178,7 @@ vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double
     double nuevoCentroX = nuevoAncho / 2.0;
 
     // Itera sobre cada pixel de la antigua imagen
-    #pragma omp parallel
+    #pragma omp parallel for
     for (int y = 0; y < alto; y++) {
         for (int x = 0; x < ancho; x++) {
             
@@ -220,22 +228,42 @@ int main(int argc, char* argv[]) {
     cin >> opcion;
 
 
-    if(opcion == 1 || opcion == 3){  // Rotar normal
+    // Rotar (proceso normal e inverso)
+    if(opcion == 1 || opcion == 3){  
         cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "rotar.bmp - rotarInversa.bmp" << "\nÁngulo: " << angulo << "\n";
 
-        const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo); 
-        guardarMatrizEnBMP("rotar.bmp", imagenRotada);
 
+        auto start = chrono::high_resolution_clock::now();
+        const vector<vector<Pixel>> imagenRotada = rotarImagen(imagen, angulo); 
+        auto end = chrono::high_resolution_clock::now();
+        auto duracion = chrono::duration_cast<chrono::microseconds>(end-start);
+        cout << "Tiempo de ejecución (rotación normal): " << duracion.count() << " microsegundos\n";
+
+        auto start2 = chrono::high_resolution_clock::now();
         const vector<vector<Pixel>> imagenRotadaInversa = rotarImagenInversa(imagen, angulo);
+        auto end2 = chrono::high_resolution_clock::now();
+        auto duracion2 = chrono::duration_cast<chrono::microseconds>(end2-start2);
+        cout << "Tiempo de ejecución (rotación inversa): " << duracion2.count() << " microsegundos\n\n";
+
+        guardarMatrizEnBMP("rotar.bmp", imagenRotada);
         guardarMatrizEnBMP("rotarInversa.bmp", imagenRotadaInversa);
     }
-    if(opcion == 2 || opcion == 3){  // Cizallar
-        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "cizallar.bmp" << "\nÁngulo: " << angulo;
 
+    // Cizallar
+    if(opcion == 2 || opcion == 3){  
+        cout << "Archivo input: " << nombreArchivo << "\nArchivo output: " << "cizallar.bmp" << "\nÁngulo: " << angulo << "\n";
+
+        auto start = chrono::high_resolution_clock::now();
         const vector<vector<Pixel>> imagenCizallada = cizallarImagen(imagen, angulo);
+        auto end = chrono::high_resolution_clock::now();
+        auto duracion = chrono::duration_cast<chrono::microseconds>(end-start);
+        cout << "Tiempo de ejecución (cizallar en x): " << duracion.count() << " microsegundos\n";
+
         guardarMatrizEnBMP("cizallar.bmp", imagenCizallada);
     }
-    if(opcion != 1 && opcion != 2 && opcion != 3){ // Opción inválida
+
+    // Opción inválida
+    if(opcion != 1 && opcion != 2 && opcion != 3){ 
         cout << "Qué le pasa pa";
     }
 
