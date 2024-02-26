@@ -41,12 +41,18 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
     double nuevoCentroX = nuevoAncho / 2.0;
     double nuevoCentroY = nuevoAlto / 2.0;
 
-    /* Esto estaba causando el patrón chistoso en los bordes jajjs (ver en "distorsionado.bmp")
+    /* Esto estaba causando el patrón chistoso en los bordes jajjs (ver en "rotarDistorsionada.bmp")
        Si definimos desde antes las variables en donde se guardarán los cálculos,
-       los resultados de una iteración van a interferir y sobreescribir los de otra.
-       Una iteración accedería en la matriz a su nuevoY, pero al nuevoX que otra calculó.
-       Ya que nuevoX se calcula primero, es más probable que solo él sea sobreescrito.
-       Por eso la imagen se distorsionaba hacia los lados y no hacia arriba y abajo. */
+       los cálculos de una iteración van a interferir y sobreescribir los de otra.
+
+       El ciclo que está siendo paralelizado es el de afuera, el de filas (valores de Y de la 
+       imagen original), así que una iteración accedería en la matriz al nuevoY y nuevoX que otra
+       iteración calculó según un valor de Y diferente.
+       Por eso la imagen se distorsionaba hacia arriba y abajo y no hacia los lados. 
+       
+       Para que los nuevoY y nuevoX no se mezclen/compartan entre iteraciones de Y, podríamos agregar
+       el parámetro private(nuevoX, nuevoY) en la sentencia #pragma, así cada hilo tiene su reserva.      
+       */
     //int nuevoX, nuevoY;    <---- maaaaal, muy maaaaaaaaaaal
 
     // Itera sobre cada pixel de la antigua imagen
