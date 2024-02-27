@@ -71,7 +71,8 @@ vector<vector<Pixel>> rotarImagen(const vector<vector<Pixel>>& imagen, double an
             int nuevoX = ((x - centroX) *   cos(rad)  + (y - centroY) * sin(rad)) + nuevoCentroX; 
             int nuevoY = ((x - centroX) * (-sin(rad)) + (y - centroY) * cos(rad)) + nuevoCentroY;
 
-            // Si la ubicación en el pixel nuevo cae dentro de los límites, usa el valor de la posicion del original en el nuevo pixel
+            // Si la ubicación en el pixel nuevo cae dentro de los límites, 
+            // usa el valor de la posicion del original en el nuevo pixel
             if (nuevoX >= 0 && nuevoX < nuevoAncho && nuevoY >= 0 && nuevoY < nuevoAlto) {
                 imagenRotada[nuevoY][nuevoX] = imagen[y][x];
             }
@@ -131,11 +132,13 @@ vector<vector<Pixel>> rotarImagenInversa(const vector<vector<Pixel>>& imagen, do
             //  ------------------------------
             // Simplemente es el ángulo pero negativo
 
-            // Para cada pixel en la nueva imagen, busca cuál sería la posición de ese pixel en la imagen original, haciendo todo el proceso al contrario
+            // Para cada pixel en la nueva imagen, busca cuál sería la posición de ese pixel en la imagen original, 
+            // haciendo todo el proceso al contrario
             int viejoX = ((x - nuevoCentroX) *   cos(-rad)  + (y - nuevoCentroY) * sin(-rad)) + centroX ; 
             int viejoY = ((x - nuevoCentroX) * (-sin(-rad)) + (y - nuevoCentroY) * cos(-rad)) + centroY ;
 
-            // Si la ubicación en el pixel original cae dentro de los límites (de la original), usa el valor de esa posición en el nuevo pixel
+            // Si la ubicación en el pixel original cae dentro de los límites (de la original), 
+            // usa el valor de esa posición en el nuevo pixel
             if (viejoX >= 0 && viejoX < ancho && viejoY >= 0 && viejoY < alto) {
                 imagenRotada[y][x] = imagen[viejoY][viejoX];
             }
@@ -199,7 +202,8 @@ vector<vector<Pixel>> cizallarImagen(const vector<vector<Pixel>>& imagen, double
             // En el cizallamiento, sólo cambia su posición en X
             int nuevoX = ((x - centroX) + (y - centroY) * tan(rad)) + nuevoCentroX; 
             
-            // Si la ubicación en el pixel nuevo cae dentro de los límites, usa el valor de la posicion del original en el nuevo pixel
+            // Si la ubicación en el pixel nuevo cae dentro de los límites, 
+            // usa el valor de la posicion del original en el nuevo pixel
             if (nuevoX >= 0 && nuevoX < nuevoAncho && y >= 0 && y < alto) {
                 imagenCizallada[y][nuevoX] = imagen[y][x];
             }
