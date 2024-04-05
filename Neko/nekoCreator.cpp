@@ -19,7 +19,9 @@ int main() {
     cin >> id;
     cin.ignore();
 
-    uint8_t edad;
+    // Por cómo funciona cin (lee como caracteres) toca guardarlo como variable uint16_t y convertirlo a uint8_t para guardarlo en .neko 
+    // En nuestro caso, nos saltamos ese paso cuando lo obligamos a guardarse en .neko en un solo byte.
+    uint16_t edad;
     cout << "Ingrese la edad: ";
     cin >> edad;
     cin.ignore();
