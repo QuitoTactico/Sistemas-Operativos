@@ -32,7 +32,7 @@ int main() {
     uint8_t nombreLen = nombre.size();
 
     string abreviacion;
-    cout << "Ingrese la abreviación: ";
+    cout << "Ingrese la abreviación (ver Neko/GLOSARIOINCMNSZ.pdf): ";
     getline(cin, abreviacion);
     uint8_t abreviacionLen = abreviacion.size();
 
@@ -54,6 +54,13 @@ int main() {
 
         // Abre el archivo de la imagen en modo binario
         ifstream foto("foto_input.png", ios::binary);
+
+        /*
+        // Comprueba si el archivo se abrió correctamente
+        if (!neko) {
+            cerr << "No se pudo abrir el archivo neko_input.neko" << endl;
+            return 1;
+        }*/
 
         // Comprueba si el archivo se abrió correctamente
         if (!foto) {
