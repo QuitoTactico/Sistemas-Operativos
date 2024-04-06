@@ -37,8 +37,10 @@ int main() {
 
         file.close();
 
-        cout << "ID: " << id << endl;  //los uint16_t son tratados por cout como enteros, como acá
-        //pero los uint8_t son tratados como unsigned char, así que toca asegurarse de que se imprima como entero
+        //los uint16_t son tratados por cout como enteros, como en ID
+        //pero los uint8_t como en edad son tratados como unsigned char, 
+        //así que toca asegurarse de que se imprima como entero
+        cout << "ID: " << id << endl;  
         cout << "Edad: " << static_cast<int>(edad) << endl;     
         cout << "Nombre: " << nombre << endl;
         cout << "Abreviación: " << abreviacion << endl;

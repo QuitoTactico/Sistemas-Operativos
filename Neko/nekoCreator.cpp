@@ -51,6 +51,41 @@ int main() {
         file.write(abreviacion.c_str(), abreviacionLen);            // X: str: Abreviación
         file.write(reinterpret_cast<char*>(&descripcionLen), 2);    // 2: int: Largo de la descripción
         file.write(descripcion.c_str(), descripcionLen);            // X: str: Descripción
+
+        // Abre el archivo de la imagen en modo binario
+        ifstream foto("foto_input.png", ios::binary);
+
+        // Comprueba si el archivo se abrió correctamente
+        if (!foto) {
+            cerr << "No se pudo abrir la foto_input.png" << endl;
+            return 1;
+        }
+        else{
+            // Mueve el puntero al final del archivo
+            foto.seekg(0, ios::end);
+
+            // Obtiene la longitud del archivo
+            int longitud = foto.tellg();
+
+            // Mueve el puntero de nuevo al inicio del archivo
+            foto.seekg(0, ios::beg);
+
+            // Crea un buffer para almacenar la imagen
+            char* buffer = new char[longitud];
+
+            // Lee la imagen en el buffer
+            foto.read(buffer, longitud);
+
+            // Cierra el archivo de la imagen
+            foto.close();
+
+            // Escribe la imagen en el archivo .neko
+            file.write(buffer, longitud);
+
+            // Libera el buffer
+            delete[] buffer;
+        }
+
         file.close();
         cout << "Datos guardados en el archivo." << endl;
     } else {
