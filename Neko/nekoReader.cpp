@@ -5,6 +5,17 @@
 
 using namespace std;
 
+// #bytes: tipo: descripción
+
+// 4: int: ID
+// 1: int: Sexo[7] y Edad [6..0]
+// 1: int: Largo del nombre
+// X: str: Nombre
+// 1: int: Largo de la abreviación
+// X: str: Abreviación
+// 2: int: Largo de la descripción
+// X: str: Descripción
+
 int main(int argc, char* argv[]) {
     if (argc != 2) {
         cerr << "Uso: " << argv[0] << " <foto_a_crear.png>" << endl;
@@ -13,7 +24,7 @@ int main(int argc, char* argv[]) {
     const char* nombreFoto = argv[1];
 
     uint32_t id;
-    uint8_t edad;
+    uint8_t edadSexo;   uint16_t edad;   bool sexo;   string sexoString;  //Sexo[7] y Edad [6..0].  BITS: SEEEEEEE
     uint8_t nombreLen;
     string nombre;
     uint8_t abreviacionLen;
@@ -29,7 +40,10 @@ int main(int argc, char* argv[]) {
         file.read(reinterpret_cast<char*>(&id), 4);
 
         //EDAD
-        file.read(reinterpret_cast<char*>(&edad), 1);
+        file.read(reinterpret_cast<char*>(&edadSexo), 1);                    // SEEEEEEE
+        edad = edadSexo & 0x7F;  //se queda con los 7 bits menos significativos _EEEEEEE
+        sexo = edadSexo >> 7;    //se queda con el bit más significativo        S_______
+        sexoString = sexo ? "Femenino" : "Masculino";  //si sexo es true|1, entonces es femenino, sino masculino
 
         //NOMBRE
         file.read(reinterpret_cast<char*>(&nombreLen), 1); //obtiene el tamaño del string (no es necesariamente el largo,
@@ -94,7 +108,8 @@ int main(int argc, char* argv[]) {
         //pero los uint8_t como en edad son tratados como unsigned char, 
         //así que toca asegurarse de que se imprima como entero
         cout << "ID: " << id << endl;  
-        cout << "Edad: " << static_cast<int>(edad) << endl;     
+        cout << "Edad: " << edad << endl; 
+        cout << "Sexo: " << sexoString << endl;    
         cout << "Nombre: " << nombre << endl;
         cout << "Abreviación: " << abreviacion << endl;
         cout << "Descripción: " << descripcion << endl;

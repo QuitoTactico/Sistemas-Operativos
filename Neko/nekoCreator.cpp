@@ -39,9 +39,18 @@ int main(int argc, char* argv[]) {
     cin >> edad;
     cin.ignore();
 
+    //SEXO
+    bool sexo;
+    cout << "Ingrese el sexo (0 para masculino, 1 para femenino): ";
+    cin >> sexo;
+    cin.ignore();
+
+    //almacena la edad y el sexo en un solo byte. Sexo[7] y Edad [6..0].  BITS: 76543210
+    uint8_t edadSexo = (sexo << 7) | (edad & 0x7F);                  //   DIST: SEEEEEEE
+
     //NOMBRE
     string nombre;
-    cout << "Ingrese el nombre del paciente: ";
+    cout << "Ingrese el nombre completo del paciente: ";
     getline(cin, nombre);
     uint8_t nombreLen = nombre.size();
 
@@ -69,7 +78,7 @@ int main(int argc, char* argv[]) {
     if (file.is_open()) {  
         //escribimos todos los datos con sus respectivos tamaños    //bytes: tipo: descripción
         file.write(reinterpret_cast<char*>(&id), 4);                // 4: int: ID
-        file.write(reinterpret_cast<char*>(&edad), 1);              // 1: int: Sexo[7] y Edad [6..0]
+        file.write(reinterpret_cast<char*>(&edadSexo), 1);          // 1: int: Sexo[7] y Edad [6..0]. SEEEEEEE
         file.write(reinterpret_cast<char*>(&nombreLen), 1);         // 1: int: Largo del nombre
         file.write(nombre.c_str(), nombreLen);                      // X: str: Nombre
         file.write(reinterpret_cast<char*>(&abreviacionLen), 1);    // 1: int: Largo de la abreviación
