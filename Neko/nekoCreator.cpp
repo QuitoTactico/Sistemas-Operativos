@@ -23,41 +23,51 @@ int main(int argc, char* argv[]) {
     }
     const char* nombreFoto = argv[1];
 
+    // ---------------------------------- TOMA DE LOS DATOS ----------------------------------
 
+    //ID
     uint32_t id;
     cout << "Ingrese el ID: ";
     cin >> id;
     cin.ignore();
 
-    // Por cómo funciona cin (lee como caracteres) toca guardarlo como variable uint16_t y convertirlo a uint8_t para guardarlo en .neko 
-    // En nuestro caso, nos saltamos ese paso cuando lo obligamos a guardarse en .neko en un solo byte.
+    //EDAD  
+    //por cómo funciona cin (lee como caracteres) toca guardarlo como variable uint16_t y convertirlo a uint8_t para guardarlo en .neko 
+    //en nuestro caso, nos saltamos ese paso cuando lo obligamos a guardarse en .neko en un solo byte.
     uint16_t edad;
     cout << "Ingrese la edad: ";
     cin >> edad;
     cin.ignore();
 
+    //NOMBRE
     string nombre;
     cout << "Ingrese el nombre del paciente: ";
     getline(cin, nombre);
     uint8_t nombreLen = nombre.size();
 
+    //ABREVIACIÓN
     string abreviacion;
     cout << "Ingrese la abreviación (o \"ver\" para ver el glosario): ";
     getline(cin, abreviacion);
-    if (abreviacion == "ver") {
+    if (abreviacion == "ver") {     //por si el usuario quiere ver el glosario de abreviaciones
         cout << GLOSARIO << endl;
         cout << "Ingrese la abreviación: ";
         getline(cin, abreviacion);
     }
     uint8_t abreviacionLen = abreviacion.size();
 
+    //DESCRIPCIÓN
     string descripcion;
     cout << "Ingrese una descripción más detallada (máximo 65536 caracteres): ";
     getline(cin, descripcion);
     uint16_t descripcionLen = descripcion.size();
 
+    // ---------------------------------- ESCRITURA DE LOS DATOS ----------------------------------
+
+    //abrimos el archivo .neko en modo binario (es llamado foto.neko por default)
     ofstream file("foto.neko", ios::binary);
-    if (file.is_open()) {                                       // bytes: tipo: descripción
+    if (file.is_open()) {  
+        //escribimos todos los datos con sus respectivos tamaños    //bytes: tipo: descripción
         file.write(reinterpret_cast<char*>(&id), 4);                // 4: int: ID
         file.write(reinterpret_cast<char*>(&edad), 1);              // 1: int: Sexo[7] y Edad [6..0]
         file.write(reinterpret_cast<char*>(&nombreLen), 1);         // 1: int: Largo del nombre
@@ -69,6 +79,8 @@ int main(int argc, char* argv[]) {
 
         //abrimos el archivo de la imagen en modo binario
         ifstream foto(nombreFoto, ios::binary);
+
+        // ---------------------------------- ESCRITURA DE LA IMAGEN ----------------------------------
 
         //comprobamos si el archivo se abrió correctamente
         if (!foto) {
@@ -105,7 +117,8 @@ int main(int argc, char* argv[]) {
         file.close();
         cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto.neko]" << endl;
     } else {
-        cout << "No se pudo abrir el archivo." << endl;
+        //fracaso para los fracasados...
+        cout << "No se pudo abrir el archivo [foto.neko]." << endl;
     }
 
     return 0;

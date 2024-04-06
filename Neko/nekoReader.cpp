@@ -105,7 +105,7 @@ int main(int argc, char* argv[]) {
 
         cerr << "\nLa foto recibida de [foto.neko] se ha almacenado en [" << nombreFoto << "]" << endl;
     } else {
-        cout << "No se pudo abrir el archivo." << endl;
+        cout << "No se pudo abrir el archivo [foto.neko] o no existe.\nPor favor ubicar el archivo en esta misma ruta y con permisos de lectura." << endl;
         return 1;
     }
 
