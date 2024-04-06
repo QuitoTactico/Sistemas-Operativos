@@ -2,10 +2,13 @@
 #include <fstream>
 #include <cstdint>
 #include <string>
+#include "glosario.cpp"
 using namespace std;
 
+// #bytes: tipo: descripción
+
 // 4: int: ID
-// 1: int: Edad
+// 1: int: Sexo[7] y Edad [6..0]
 // 1: int: Largo del nombre
 // X: str: Nombre
 // 1: int: Largo de la abreviación
@@ -39,8 +42,13 @@ int main(int argc, char* argv[]) {
     uint8_t nombreLen = nombre.size();
 
     string abreviacion;
-    cout << "Ingrese la abreviación (ver GLOSARIOINCMNSZ.pdf): ";
+    cout << "Ingrese la abreviación (o \"ver\" para ver el glosario): ";
     getline(cin, abreviacion);
+    if (abreviacion == "ver") {
+        cout << GLOSARIO << endl;
+        cout << "Ingrese la abreviación: ";
+        getline(cin, abreviacion);
+    }
     uint8_t abreviacionLen = abreviacion.size();
 
     string descripcion;
@@ -49,9 +57,9 @@ int main(int argc, char* argv[]) {
     uint16_t descripcionLen = descripcion.size();
 
     ofstream file("foto.neko", ios::binary);
-    if (file.is_open()) {
+    if (file.is_open()) {                                       // bytes: tipo: descripción
         file.write(reinterpret_cast<char*>(&id), 4);                // 4: int: ID
-        file.write(reinterpret_cast<char*>(&edad), 1);              // 1: int: Edad
+        file.write(reinterpret_cast<char*>(&edad), 1);              // 1: int: Sexo[7] y Edad [6..0]
         file.write(reinterpret_cast<char*>(&nombreLen), 1);         // 1: int: Largo del nombre
         file.write(nombre.c_str(), nombreLen);                      // X: str: Nombre
         file.write(reinterpret_cast<char*>(&abreviacionLen), 1);    // 1: int: Largo de la abreviación
@@ -59,47 +67,41 @@ int main(int argc, char* argv[]) {
         file.write(reinterpret_cast<char*>(&descripcionLen), 2);    // 2: int: Largo de la descripción
         file.write(descripcion.c_str(), descripcionLen);            // X: str: Descripción
 
-        // Abre el archivo de la imagen en modo binario
+        //abrimos el archivo de la imagen en modo binario
         ifstream foto(nombreFoto, ios::binary);
 
-        /*
-        // Comprueba si el archivo se abrió correctamente
-        if (!neko) {
-            cerr << "No se pudo abrir el archivo neko_input.neko" << endl;
-            return 1;
-        }*/
-
-        // Comprueba si el archivo se abrió correctamente
+        //comprobamos si el archivo se abrió correctamente
         if (!foto) {
             cerr << nombreFoto << " no existe o no se pudo abrir." << endl;
             return 1;
         }
         else{
-            // Mueve el puntero al final del archivo
+            //movemos el puntero al final del archivo
             foto.seekg(0, ios::end);
 
-            // Obtiene la longitud del archivo
+            //sacamos la longitud del archivo
             int longitud = foto.tellg();
 
-            // Mueve el puntero de nuevo al inicio del archivo
+            //regresamos el puntero al inicio del archivo
             foto.seekg(0, ios::beg);
 
-            // Crea un buffer para almacenar la imagen
+            //creamos un buffer para almacenar la imagen temporalmente
             char* buffer = new char[longitud];
 
-            // Lee la imagen en el buffer
+            //leemos la imagen y la guardamos en el buffer
             foto.read(buffer, longitud);
 
-            // Cierra el archivo de la imagen
+            //podemos cerrar el archivo de la imagen
             foto.close();
 
-            // Escribe la imagen en el archivo .neko
+            //escribimos la imagen que fué guardada en el buffer, en el archivo .neko
             file.write(buffer, longitud);
 
-            // Libera el buffer
+            //liberamos el buffer
             delete[] buffer;
         }
 
+        //éxito para los exitosos
         file.close();
         cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto.neko]" << endl;
     } else {
