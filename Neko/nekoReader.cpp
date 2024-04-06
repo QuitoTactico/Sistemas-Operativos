@@ -5,7 +5,13 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        cerr << "Uso: " << argv[0] << " <foto_a_crear.png>" << endl;
+        return 1;
+    }
+    const char* nombreFoto = argv[1];
+
     uint32_t id;
     uint8_t edad;
     uint8_t nombreLen;
@@ -63,13 +69,13 @@ int main() {
         file.close();
 
         //abrimos el archivo de la imagen output en modo binario
-        ofstream foto("foto_output.png", ios::binary);
+        ofstream foto(nombreFoto, ios::binary);
 
         // ---------------------------------- ESCRITURA DE LA IMAGEN ----------------------------------
 
         //si el archivo de la imagen se abrió correctamente, guarda los datos en él
         if (!foto) {
-            cerr << "No se pudo abrir el archivo foto_output.png" << endl;
+            cerr << "No se pudo abrir el archivo " << nombreFoto << endl;
             delete[] buffer;
             return 1;
         }
@@ -96,6 +102,8 @@ int main() {
         (de hecho, cualquier tipo de archivo), no hay forma de saber dónde se ubica la longitud de la imagen 
         en todos los tipos diferentes de headers que existen. También es trabajo innecesario, 
         lo importante de nekoReader es recibir y guardar los datos. */
+
+        cerr << "\nLa foto recibida de [foto.neko] se ha almacenado en [" << nombreFoto << "]" << endl;
     } else {
         cout << "No se pudo abrir el archivo." << endl;
         return 1;

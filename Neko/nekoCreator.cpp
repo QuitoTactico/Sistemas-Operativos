@@ -13,7 +13,14 @@ using namespace std;
 // 2: int: Largo de la descripción
 // X: str: Descripción
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        cerr << "Uso: " << argv[0] << " <foto_a_ingresar.png>" << endl;
+        return 1;
+    }
+    const char* nombreFoto = argv[1];
+
+
     uint32_t id;
     cout << "Ingrese el ID: ";
     cin >> id;
@@ -32,7 +39,7 @@ int main() {
     uint8_t nombreLen = nombre.size();
 
     string abreviacion;
-    cout << "Ingrese la abreviación (ver Neko/GLOSARIOINCMNSZ.pdf): ";
+    cout << "Ingrese la abreviación (ver GLOSARIOINCMNSZ.pdf): ";
     getline(cin, abreviacion);
     uint8_t abreviacionLen = abreviacion.size();
 
@@ -53,7 +60,7 @@ int main() {
         file.write(descripcion.c_str(), descripcionLen);            // X: str: Descripción
 
         // Abre el archivo de la imagen en modo binario
-        ifstream foto("foto_input.png", ios::binary);
+        ifstream foto(nombreFoto, ios::binary);
 
         /*
         // Comprueba si el archivo se abrió correctamente
@@ -64,7 +71,7 @@ int main() {
 
         // Comprueba si el archivo se abrió correctamente
         if (!foto) {
-            cerr << "No se pudo abrir la foto_input.png" << endl;
+            cerr << nombreFoto << " no existe o no se pudo abrir." << endl;
             return 1;
         }
         else{
@@ -94,7 +101,7 @@ int main() {
         }
 
         file.close();
-        cout << "Datos guardados en el archivo." << endl;
+        cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto.neko]" << endl;
     } else {
         cout << "No se pudo abrir el archivo." << endl;
     }
