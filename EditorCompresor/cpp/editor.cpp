@@ -9,7 +9,7 @@ void editar_buffer(WINDOW* win, std::string& buffer) {
 
     while (running) {
         wclear(win);
-        mvwprintw(win, 0, 0, buffer.c_str());  // Imprime el buffer actual
+        mvwprintw(win, 0, 0, "%s", buffer.c_str()); // Imprime el buffer actual
         wmove(win, row, col);  // Mueve el cursor a la posición actual
 
         ch = wgetch(win);
@@ -23,7 +23,7 @@ void editar_buffer(WINDOW* win, std::string& buffer) {
                     echo();
                     mvwgetstr(win, 1, 0, archivo);
                     noecho();
-                    guardar_comprimido(buffer, archivo);
+                    guardar_comprimido(comprimir(buffer), archivo);
                 }
                 break;
             case KEY_BACKSPACE:
@@ -57,7 +57,8 @@ int main() {
         char archivo[80];
         std::cout << "Nombre del archivo a abrir: ";
         std::cin >> archivo;
-        buffer = leer_comprimido(archivo);
+        std::vector<int> comprimido = leer_comprimido(archivo);
+        buffer = descomprimir(comprimido);
     }
 
     initscr();
