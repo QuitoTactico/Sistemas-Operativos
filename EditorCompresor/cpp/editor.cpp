@@ -4,18 +4,18 @@
 void editar_buffer(WINDOW* win, std::string& buffer) {
     int ch;
     int row = 0;
-    int col = 0;
-    int actual = 0;
+    int col = buffer.length();
+    int actual = buffer.length();
     bool running = true;
 
     while (running) {
         wclear(win);
-        mvwprintw(win, 0, 0, "%s", buffer.c_str()); // Imprime el buffer actual
-        wmove(win, row, col);  // Mueve el cursor a la posición actual
+        mvwprintw(win, 0, 0, "%s", buffer.c_str()); // imprimimos el buffer actual
+        wmove(win, row, col);  // movemos el cursor a la posición actual
 
         ch = wgetch(win);
         switch (ch) {
-            case 24:  // Ctrl-X para guardar y salir
+            case 24:  // ctrl-X para guardar y salir
                 {
                     char archivo[80];
                     echo();
@@ -23,7 +23,10 @@ void editar_buffer(WINDOW* win, std::string& buffer) {
                     wrefresh(win);
                     wgetstr(win, archivo);
                     noecho();
-                    guardar_comprimido(comprimir(buffer), archivo);
+
+                    endwin();
+                    std::vector<int> comprimido = comprimir(buffer);
+                    guardar_comprimido(comprimido, archivo);
                 }
                 
                 running = false;
@@ -80,6 +83,6 @@ int main() {
 
     editar_buffer(stdscr, buffer);
 
-    endwin();
+    //endwin();
     return 0;
 }
