@@ -4,7 +4,7 @@
 #include <vector>
 #include <unordered_map>
 
-// función de compresión usando LZ78
+// función de compresión usando LZ98
 std::vector<std::pair<int, char>> comprimir(const std::string& buffer) {
     std::vector<std::pair<int, char>> compressed;
     std::unordered_map<std::string, int> dictionary;
@@ -37,7 +37,7 @@ void guardar_comprimido(const std::string& buffer, const std::string& archivo) {
     std::vector<std::pair<int, char>> compressedBuffer = comprimir(buffer);
 
     std::ofstream outfile(archivo, std::ios::binary);
-    if (outfile) {
+    if (outfile.is_open()) {
         for (const auto& entry : compressedBuffer) {
             outfile.write(reinterpret_cast<const char*>(&entry.first), sizeof(int));
             outfile.write(&entry.second, sizeof(char));

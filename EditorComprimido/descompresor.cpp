@@ -5,10 +5,10 @@
 #include <unordered_map>
 
 // leemos el archivo comprimido para obtener la secuencia comprimida
-std::vector<std::pair<int, char>> leer_comprimido(std::string archivo) {
+std::vector<std::pair<int, char>> leer_comprimido(const std::string& archivo) {
     std::ifstream infile(archivo, std::ios::binary);
     std::vector<std::pair<int, char>> compressedBuffer;
-    if (infile) {
+    if (infile.is_open()) {
         int index;
         char character;
         while (infile.read(reinterpret_cast<char*>(&index), sizeof(int)) && infile.read(&character, sizeof(char))) {

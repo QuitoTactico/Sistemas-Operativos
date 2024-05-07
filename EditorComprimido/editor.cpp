@@ -6,9 +6,10 @@
 #include <unordered_map>
 #include <sstream>
 
-// prototipos de las funciones definidas en descompresor.cpp
+// prototipos de las funciones definidas en descompresor.cpp y compresor.cpp
 std::string descomprimir(const std::vector<std::pair<int, char>>& compressed);
-std::vector<std::pair<int, char>> leer_comprimido();
+std::vector<std::pair<int, char>> leer_comprimido(const std::string& archivo);
+void guardar_comprimido(const std::string& buffer, const std::string& archivo);
 
 // función principal que permite editar el buffer
 void editar_buffer(std::string& buffer) {
@@ -47,7 +48,7 @@ void editar_buffer(std::string& buffer) {
         if (input.size() > 0 && input[0] == '\x1b') { // control character (escape sequence)
             if (input.size() > 1 && input[1] == 'S') { // Ctrl+S para guardar
                 // llamamos a la función para guardar el buffer
-                buffer = descomprimir(leer_comprimido());
+                guardar_comprimido(buffer, "archivo_comprimido.bin");
             } else if (input.size() > 1 && input[1] == 'X') { // Ctrl+X para salir
                 running = false;
             }
@@ -107,7 +108,7 @@ int main() {
 
     if (std::toupper(opcion) == 'S') {
         // llamamos a la función para descomprimir el archivo
-        buffer = descomprimir(leer_comprimido());
+        buffer = descomprimir(leer_comprimido("archivo_comprimido.bin"));
     }
 
     // llamamos a la función para editar el buffer
