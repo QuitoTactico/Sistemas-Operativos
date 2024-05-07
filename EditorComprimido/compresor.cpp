@@ -32,11 +32,11 @@ std::vector<std::pair<int, char>> comprimir(const std::string& buffer) {
 }
 
 // función para guardar el texto comprimido en un archivo binario
-void guardar_comprimido(const std::string& buffer) {
+void guardar_comprimido(const std::string& buffer, const std::string& archivo) {
     // llamamos a la función de compresión
     std::vector<std::pair<int, char>> compressedBuffer = comprimir(buffer);
 
-    std::ofstream outfile("archivo_comprimido.bin", std::ios::binary);
+    std::ofstream outfile(archivo, std::ios::binary);
     if (outfile) {
         for (const auto& entry : compressedBuffer) {
             outfile.write(reinterpret_cast<const char*>(&entry.first), sizeof(int));
@@ -50,10 +50,10 @@ void guardar_comprimido(const std::string& buffer) {
 }
 
 int main() {
-    std::string buffer = "Contenido del buffer a comprimir";
+    std::string buffer = "HOLAAAAAAAAAAAAAAAAAaaaaaaaaaa soy Esteban aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     // llamamos a la función para guardar el texto comprimido
-    guardar_comprimido(buffer);
+    guardar_comprimido(buffer, "miau.bin");
 
     return 0;
 }
