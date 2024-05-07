@@ -3,6 +3,19 @@
 #include <vector>
 #include <fstream>
 
+void mostrarDiccionario(const std::unordered_map<std::string, int>& dictionary) {
+    std::vector<std::string> dictionaryReverse(dictionary.size());
+    for (const auto& entry : dictionary) {
+        dictionaryReverse[entry.second] = entry.first;
+    }
+
+    for (size_t i = 0; i < dictionaryReverse.size(); ++i) {
+        if (!dictionaryReverse[i].empty()) {
+            std::cout << "Indice: " << i << ", Valor: " << dictionaryReverse[i] << std::endl;
+        }
+    }
+}
+
 std::vector<int> comprimir(const std::string& texto) {
     std::unordered_map<std::string, int> dictionary;
     for (int i = 0; i < 256; ++i) {
@@ -27,6 +40,8 @@ std::vector<int> comprimir(const std::string& texto) {
     if (!w.empty()) {
         comprimido.push_back(dictionary[w]);
     }
+
+    mostrarDiccionario(dictionary);
 
     return comprimido;
 }
