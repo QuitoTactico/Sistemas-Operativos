@@ -1,7 +1,4 @@
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-#include <fstream>
+#include "editor.h"
 
 std::vector<int> leer_comprimido(const std::string& archivo) {
     std::vector<int> comprimido;
@@ -47,9 +44,11 @@ std::string descomprimir(const std::vector<int>& comprimido) {
     return descomprimido;
 }
 
+/*
 int main() {
     auto comprimido = leer_comprimido("miau.bin");
     std::string descomprimido = descomprimir(comprimido);
     std::cout << "Texto descomprimido: " << descomprimido << std::endl;
     return 0;
 }
+*/

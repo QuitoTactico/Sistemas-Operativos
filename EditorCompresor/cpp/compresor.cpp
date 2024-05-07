@@ -1,7 +1,4 @@
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-#include <fstream>
+#include "editor.h"
 
 void mostrarDiccionario(const std::unordered_map<std::string, int>& dictionary) {
     std::vector<std::string> dictionaryReverse(dictionary.size());
@@ -56,9 +53,11 @@ void guardar_comprimido(const std::vector<int>& comprimido, const std::string& a
     std::cout << "Archivo guardado de forma comprimida." << std::endl;
 }
 
+/*
 int main() {
     std::string texto = "Eclesiastes 33 de eclesiastes digo yo, el yo que soy, el yo que fui, el yo que seré.";
     auto comprimido = comprimir(texto);
     guardar_comprimido(comprimido, "miau.bin");
     return 0;
 }
+*/
