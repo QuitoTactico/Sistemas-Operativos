@@ -1,28 +1,6 @@
 #include <ncurses.h> //sudo apt-get install libncurses5-dev libncursesw5-dev
 #include "editor.h"
 
-void guardar_comprimido(const std::string& buffer, const std::string& archivo) {
-    std::vector<int> comprimido = comprimir(buffer);
-    std::ofstream output(archivo, std::ios::binary);
-    for (int numero : comprimido) {
-        output.put(char((numero >> 8) & 0xFF));
-        output.put(char(numero & 0xFF));
-    }
-    output.close();
-}
-
-std::string leer_comprimido(const std::string& archivo) {
-    std::ifstream input(archivo, std::ios::binary);
-    std::vector<int> comprimido;
-    char bytes[2];
-    while (input.read(bytes, 2)) {
-        int numero = (unsigned char)(bytes[0]) << 8 | (unsigned char)(bytes[1]);
-        comprimido.push_back(numero);
-    }
-    input.close();
-    return descomprimir(comprimido);
-}
-
 void editar_buffer(WINDOW* win, std::string& buffer) {
     int ch;
     int row = 0;
