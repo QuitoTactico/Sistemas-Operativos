@@ -46,6 +46,8 @@ void LZW::comprimir(const std::string &inputFile, const std::string &outputFile)
         escribirCodigo(dictionary[current], fout);
     }
 
+    mostrarDiccionario();
+
     fin.close();
     fout.close();
     std::cout << "Archivo comprimido con éxito!" << std::endl;
@@ -96,6 +98,28 @@ void LZW::escribirCodigo(int code, std::ofstream &fout) {
 }
 
 void LZW::mostrarDiccionario() {
+    std::vector<std::string> dictionaryReverse(static_cast<size_t>(MAX_DICT_SIZE));
+    for (auto entry : dictionary) {
+        dictionaryReverse[entry.second] = entry.first;
+    }
+
+    for (size_t i = 0; i < dictionaryReverse.size(); ++i) {
+        if (!dictionaryReverse[i].empty()) {
+            std::cout << "Codigo: " << i << ", Palabra: " << dictionaryReverse[i] << std::endl;
+        }
+    }
+}
+
+/*
+void LZW::mostrarDiccionario() {
+    for (const auto &entry : dictionary) {
+        std::cout << "Codigo: " << entry.second << ", Palabra: " << entry.first << std::endl;
+    }
+}
+*/
+
+/*
+void LZW::mostrarDiccionario() {
     std::cout << "Diccionario actual:" << std::endl;
     size_t i = 0;
     for (const auto &entry : dictionary) {
@@ -103,3 +127,4 @@ void LZW::mostrarDiccionario() {
         ++i;
     }
 }
+*/
