@@ -2,7 +2,10 @@
 #include <fstream>
 #include <cstdint>
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include "glosario.cpp"
+
 using namespace std;
 
 // #bytes: tipo: descripción
@@ -15,6 +18,53 @@ using namespace std;
 // X: str: Abreviación
 // 2: int: Largo de la descripción
 // X: str: Descripción
+
+
+// función de compresión usando LZ98
+std::vector<std::pair<int, char>> comprimir(const std::string& buffer) {
+    std::vector<std::pair<int, char>> compressed;
+    std::unordered_map<std::string, int> dictionary;
+    int dictSize = 256;
+
+    std::string w;
+    for (char c : buffer) {
+        std::string wc = w + c;
+        if (dictionary.find(wc) != dictionary.end()) {
+            w = wc;
+        } else {
+            if (!w.empty()) {
+                compressed.push_back(std::make_pair(dictionary[w], c));
+            }
+            dictionary[wc] = dictSize++;
+            w = std::string(1, c);
+        }
+    }
+
+    if (!w.empty()) {
+        compressed.push_back(std::make_pair(dictionary[w], '\0'));
+    }
+
+    return compressed;
+}
+
+// función para guardar el texto comprimido en un archivo binario
+void guardar_comprimido(const std::string& buffer, const std::string& archivo) {
+    // llamamos a la función de compresión
+    std::vector<std::pair<int, char>> compressedBuffer = comprimir(buffer);
+
+    std::ofstream outfile(archivo, std::ios::binary);
+    if (outfile.is_open()) {
+        for (const auto& entry : compressedBuffer) {
+            outfile.write(reinterpret_cast<const char*>(&entry.first), sizeof(int));
+            outfile.write(&entry.second, sizeof(char));
+        }
+        outfile.close();
+        std::cout << "Archivo guardado de forma comprimida." << std::endl;
+    } else {
+        std::cerr << "Error al abrir el archivo para escritura." << std::endl;
+    }
+}
+
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -125,6 +175,14 @@ int main(int argc, char* argv[]) {
         //éxito para los exitosos
         file.close();
         cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto.neko]" << endl;
+
+        // Leer el archivo .neko en un buffer
+        std::ifstream fileIn("foto.neko", std::ios::binary);
+        std::string buffer((std::istreambuf_iterator<char>(fileIn)), std::istreambuf_iterator<char>());
+
+        // comprimimos y guardamos el buffer en un archivo .neko2
+        guardar_comprimido(buffer, "foto.neko2");
+
     } else {
         //fracaso para los fracasados...
         cout << "No se pudo abrir el archivo [foto.neko]." << endl;
