@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 using namespace std;
 
@@ -12,11 +13,12 @@ vector<int> comprimir(const string& texto);
 void guardar_comprimido(const vector<int>& comprimido, const string& archivo);
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        cerr << "Uso: " << argv[0] << " <foto_a_ingresar.png>" << endl;
+    if (argc != 3) {
+        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_ingresar.png>" << endl;
         return 1;
     }
-    const char* nombreFoto = argv[1];
+    const char* nombreNeko = argv[1];
+    const char* nombreFoto = argv[2];
 
     // ---------------------------------- TOMA DE LOS DATOS ----------------------------------
 
@@ -61,70 +63,62 @@ int main(int argc, char* argv[]) {
 
     // ---------------------------------- ESCRITURA DE LOS DATOS ----------------------------------
 
-    // Abrimos el archivo .neko en modo binario (es llamado foto.neko por default)
-    ofstream file("foto.neko", ios::binary);
-    if (file.is_open()) {  
-        // Escribimos todos los datos con sus respectivos tamaños
-        file.write(reinterpret_cast<char*>(&id), 4);
-        file.write(reinterpret_cast<char*>(&edadSexo), 1);
-        file.write(reinterpret_cast<char*>(&nombreLen), 1);
-        file.write(nombre.c_str(), nombreLen);
-        file.write(reinterpret_cast<char*>(&abreviacionLen), 1);
-        file.write(abreviacion.c_str(), abreviacionLen);
-        file.write(reinterpret_cast<char*>(&descripcionLen), 2);
-        file.write(descripcion.c_str(), descripcionLen);
+    // Buffer para almacenar todos los datos binarios
+    stringstream buffer;
 
-        // Abrimos el archivo de la imagen en modo binario
-        ifstream foto(nombreFoto, ios::binary);
+    // Escribimos todos los datos con sus respectivos tamaños
+    buffer.write(reinterpret_cast<char*>(&id), 4);
+    buffer.write(reinterpret_cast<char*>(&edadSexo), 1);
+    buffer.write(reinterpret_cast<char*>(&nombreLen), 1);
+    buffer.write(nombre.c_str(), nombreLen);
+    buffer.write(reinterpret_cast<char*>(&abreviacionLen), 1);
+    buffer.write(abreviacion.c_str(), abreviacionLen);
+    buffer.write(reinterpret_cast<char*>(&descripcionLen), 2);
+    buffer.write(descripcion.c_str(), descripcionLen);
 
-        // Comprobamos si el archivo se abrió correctamente
-        if (!foto) {
-            cerr << nombreFoto << " no existe o no se pudo abrir." << endl;
-            return 1;
-        } else {
-            // Movemos el puntero al final del archivo
-            foto.seekg(0, ios::end);
+    // Abrimos el archivo de la imagen en modo binario
+    ifstream foto(nombreFoto, ios::binary);
 
-            // Sacamos la longitud del archivo
-            int longitud = foto.tellg();
-
-            // Regresamos el puntero al inicio del archivo
-            foto.seekg(0, ios::beg);
-
-            // Creamos un buffer para almacenar la imagen temporalmente
-            char* buffer = new char[longitud];
-
-            // Leemos la imagen y la guardamos en el buffer
-            foto.read(buffer, longitud);
-
-            // Podemos cerrar el archivo de la imagen
-            foto.close();
-
-            // Escribimos la imagen que fue guardada en el buffer, en el archivo .neko
-            file.write(buffer, longitud);
-
-            // Liberamos el buffer
-            delete[] buffer;
-        }
-
-        // Cerramos el archivo .neko
-        file.close();
-
-        // Leer el contenido del archivo binario para comprimirlo
-        ifstream fileRead("foto.neko", ios::binary);
-        string fileContent((istreambuf_iterator<char>(fileRead)), istreambuf_iterator<char>());
-        fileRead.close();
-
-        // Comprimir el contenido del archivo
-        vector<int> comprimido = comprimir(fileContent);
-
-        // Guardar el archivo comprimido
-        guardar_comprimido(comprimido, "foto_comprimido.neko");
-
-        cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto_comprimido.neko]" << endl;
+    // Comprobamos si el archivo se abrió correctamente
+    if (!foto) {
+        cerr << nombreFoto << " no existe o no se pudo abrir." << endl;
+        return 1;
     } else {
-        cerr << "No se pudo abrir el archivo [foto.neko]." << endl;
+        // Movemos el puntero al final del archivo
+        foto.seekg(0, ios::end);
+
+        // Sacamos la longitud del archivo
+        int longitud = foto.tellg();
+
+        // Regresamos el puntero al inicio del archivo
+        foto.seekg(0, ios::beg);
+
+        // Creamos un buffer para almacenar la imagen temporalmente
+        char* imgBuffer = new char[longitud];
+
+        // Leemos la imagen y la guardamos en el buffer
+        foto.read(imgBuffer, longitud);
+
+        // Podemos cerrar el archivo de la imagen
+        foto.close();
+
+        // Escribimos la imagen que fue guardada en el buffer
+        buffer.write(imgBuffer, longitud);
+
+        // Liberamos el buffer
+        delete[] imgBuffer;
     }
+
+    // Convertimos el stringstream a string
+    string fileContent = buffer.str();
+
+    // Comprimir el contenido del archivo
+    vector<int> comprimido = comprimir(fileContent);
+
+    // Guardar el archivo comprimido
+    guardar_comprimido(comprimido, nombreNeko);
+
+    cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [" << nombreNeko << "]" << endl;
 
     return 0;
 }

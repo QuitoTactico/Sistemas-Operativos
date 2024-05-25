@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <sstream>
 
 using namespace std;
 
@@ -12,87 +13,78 @@ vector<int> leer_comprimido(const string& archivo);
 string descomprimir(const vector<int>& comprimido);
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        cerr << "Uso: " << argv[0] << " <foto_a_crear.png>" << endl;
+    if (argc != 3) {
+        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_crear.png>" << endl;
         return 1;
     }
-    const char* nombreFoto = argv[1];
+    const char* nombreNeko = argv[1];
+    const char* nombreFoto = argv[2];
 
     // Leer y descomprimir el archivo comprimido
-    vector<int> comprimido = leer_comprimido("foto_comprimido.neko");
+    vector<int> comprimido = leer_comprimido(nombreNeko);
     string descomprimido = descomprimir(comprimido);
 
-    // Escribir el archivo descomprimido a un archivo temporal
-    ofstream fileWrite("foto_descomprimido.neko", ios::binary);
-    fileWrite.write(descomprimido.c_str(), descomprimido.size());
-    fileWrite.close();
+    // Convertimos la string descomprimida a un stringstream para facilitar la lectura binaria
+    stringstream buffer(descomprimido);
 
-    // Reabrir el archivo descomprimido para leer los datos
-    ifstream file("foto_descomprimido.neko", ios::binary);
+    uint32_t id;
+    uint8_t edadSexo;   uint16_t edad;   bool sexo;   string sexoString;
+    uint8_t nombreLen;
+    string nombre;
+    uint8_t abreviacionLen;
+    string abreviacion;
+    uint16_t descripcionLen;
+    string descripcion;
 
-    if (file.is_open()) {
-        uint32_t id;
-        uint8_t edadSexo;   uint16_t edad;   bool sexo;   string sexoString;
-        uint8_t nombreLen;
-        string nombre;
-        uint8_t abreviacionLen;
-        string abreviacion;
-        uint16_t descripcionLen;
-        string descripcion;
+    // Leer los datos del archivo descomprimido
+    buffer.read(reinterpret_cast<char*>(&id), 4);
+    buffer.read(reinterpret_cast<char*>(&edadSexo), 1);
+    edad = edadSexo & 0x7F;
+    sexo = edadSexo >> 7;
+    sexoString = sexo ? "Femenino" : "Masculino";
 
-        // Leer los datos del archivo descomprimido
-        file.read(reinterpret_cast<char*>(&id), 4);
-        file.read(reinterpret_cast<char*>(&edadSexo), 1);
-        edad = edadSexo & 0x7F;
-        sexo = edadSexo >> 7;
-        sexoString = sexo ? "Femenino" : "Masculino";
+    buffer.read(reinterpret_cast<char*>(&nombreLen), 1);
+    nombre.resize(nombreLen);
+    buffer.read(&nombre[0], nombreLen);
 
-        file.read(reinterpret_cast<char*>(&nombreLen), 1);
-        nombre.resize(nombreLen);
-        file.read(&nombre[0], nombreLen);
+    buffer.read(reinterpret_cast<char*>(&abreviacionLen), 1);
+    abreviacion.resize(abreviacionLen);
+    buffer.read(&abreviacion[0], abreviacionLen);
 
-        file.read(reinterpret_cast<char*>(&abreviacionLen), 1);
-        abreviacion.resize(abreviacionLen);
-        file.read(&abreviacion[0], abreviacionLen);
+    buffer.read(reinterpret_cast<char*>(&descripcionLen), 2);
+    descripcion.resize(descripcionLen);
+    buffer.read(&descripcion[0], descripcionLen);
 
-        file.read(reinterpret_cast<char*>(&descripcionLen), 2);
-        descripcion.resize(descripcionLen);
-        file.read(&descripcion[0], descripcionLen);
+    // Leer la imagen
+    buffer.seekg(0, ios::end);
+    int longitud = buffer.tellg();
+    int datosAnteriores = 4 + 1 + 1 + nombreLen + 1 + abreviacionLen + 2 + descripcionLen;
+    int longitudImagen = longitud - datosAnteriores;
+    buffer.seekg(datosAnteriores, ios::beg);
+    char* imgBuffer = new char[longitudImagen];
+    buffer.read(imgBuffer, longitudImagen);
 
-        // Leer la imagen
-        file.seekg(0, ios::end);
-        int longitud = file.tellg();
-        int datosAnteriores = 4 + 1 + 1 + nombreLen + 1 + abreviacionLen + 2 + descripcionLen;
-        int longitudImagen = longitud - datosAnteriores;
-        file.seekg(datosAnteriores, ios::beg);
-        char* buffer = new char[longitudImagen];
-        file.read(buffer, longitudImagen);
-        file.close();
-
-        // Escribir la imagen a un archivo
-        ofstream foto(nombreFoto, ios::binary);
-        if (!foto) {
-            cerr << "No se pudo abrir el archivo " << nombreFoto << endl;
-            delete[] buffer;
-            return 1;
-        } else {
-            foto.write(buffer, longitudImagen);
-            foto.close();
-            delete[] buffer;
-        }
-
-        // Imprimir los datos
-        cout << "ID: " << id << endl;
-        cout << "Edad: " << edad << endl;
-        cout << "Sexo: " << sexoString << endl;
-        cout << "Nombre: " << nombre << endl;
-        cout << "Abreviación: " << abreviacion << endl;
-        cout << "Descripción: " << descripcion << endl;
-
-        cerr << "\nLa foto recibida de [foto_comprimido.neko] se ha almacenado en [" << nombreFoto << "]" << endl;
+    // Escribir la imagen a un archivo
+    ofstream foto(nombreFoto, ios::binary);
+    if (!foto) {
+        cerr << "No se pudo abrir el archivo " << nombreFoto << endl;
+        delete[] imgBuffer;
+        return 1;
     } else {
-        cerr << "No se pudo abrir el archivo descomprimido [foto_descomprimido.neko]." << endl;
+        foto.write(imgBuffer, longitudImagen);
+        foto.close();
+        delete[] imgBuffer;
     }
+
+    // Imprimir los datos
+    cout << "ID: " << id << endl;
+    cout << "Edad: " << edad << endl;
+    cout << "Sexo: " << sexoString << endl;
+    cout << "Nombre: " << nombre << endl;
+    cout << "Abreviación: " << abreviacion << endl;
+    cout << "Descripción: " << descripcion << endl;
+
+    cerr << "\nLa foto recibida de [" << nombreNeko << "] se ha almacenado en [" << nombreFoto << "]" << endl;
 
     return 0;
 }
