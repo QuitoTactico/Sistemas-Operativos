@@ -8,12 +8,28 @@
 
 using namespace std;
 
-// Funciones de descompresión
+// descomprimimos con LZW y luego desencriptamos con Vigenere
+
+// #bytes:  tipo:   descripción
+
+//      4:   int:   ID
+//      1:   int:   Sexo[7] y Edad [6..0]
+//      1:   int:   Largo del nombre
+//      X:   str:   Nombre
+//      1:   int:   Largo de la abreviación
+//      X:   str:   Abreviación
+//      2:   int:   Largo de la descripción
+//      X:   str:   Descripción
+
+// ------------------------------------------------------
+
+// LZW
 vector<int> leer_comprimido(const string& archivo);
 string descomprimir(const vector<int>& comprimido);
+// Vigenere
+void desencriptarVigenere(string& data, const string& clave);
 
-// Función de descifrado Vigenere
-void descifrarVigenere(string& data, const string& clave);
+// ------------------------------------------------------
 
 int main(int argc, char* argv[]) {
     if (argc != 4) {
@@ -24,14 +40,14 @@ int main(int argc, char* argv[]) {
     const char* nombreFoto = argv[2];
     string clave = argv[3];
 
-    // Leer y descomprimir el archivo comprimido
+    // leemos y descomprimimos el archivo comprimido
     vector<int> comprimido = leer_comprimido(nombreNeko);
     string descomprimido = descomprimir(comprimido);
 
-    // Descifrar el contenido del archivo
-    descifrarVigenere(descomprimido, clave);
+    // desciframos el contenido del archivo
+    desencriptarVigenere(descomprimido, clave);
 
-    // Convertimos la string descomprimida y descifrada a un stringstream para facilitar la lectura binaria
+    // convertimos el string descomprimido y descifrado a un stringstream para facilitar la lectura binaria
     stringstream buffer(descomprimido);
 
     uint32_t id;
@@ -43,7 +59,7 @@ int main(int argc, char* argv[]) {
     uint16_t descripcionLen;
     string descripcion;
 
-    // Leer los datos del archivo descomprimido y descifrado
+    // leemos los datos del archivo descomprimido y descifrado
     buffer.read(reinterpret_cast<char*>(&id), 4);
     buffer.read(reinterpret_cast<char*>(&edadSexo), 1);
     edad = edadSexo & 0x7F;
@@ -62,7 +78,7 @@ int main(int argc, char* argv[]) {
     descripcion.resize(descripcionLen);
     buffer.read(&descripcion[0], descripcionLen);
 
-    // Leer la imagen
+    // leemos la imagen, es todo lo que queda hasta el final del archivo
     buffer.seekg(0, ios::end);
     int longitud = buffer.tellg();
     int datosAnteriores = 4 + 1 + 1 + nombreLen + 1 + abreviacionLen + 2 + descripcionLen;
@@ -71,7 +87,7 @@ int main(int argc, char* argv[]) {
     char* imgBuffer = new char[longitudImagen];
     buffer.read(imgBuffer, longitudImagen);
 
-    // Escribir la imagen a un archivo
+    // metemos la imagen en un archivo
     ofstream foto(nombreFoto, ios::binary);
     if (!foto) {
         cerr << "No se pudo abrir el archivo " << nombreFoto << endl;
@@ -83,7 +99,7 @@ int main(int argc, char* argv[]) {
         delete[] imgBuffer;
     }
 
-    // Imprimir los datos
+    // imprimimos los datos sacados
     cout << "ID: " << id << endl;
     cout << "Edad: " << edad << endl;
     cout << "Sexo: " << sexoString << endl;
@@ -96,21 +112,27 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-// Funciones de descompresión
+// ------------------------------------------------------
+
+// descompresión LZW
 vector<int> leer_comprimido(const string& archivo) {
     vector<int> comprimido;
     ifstream input(archivo, ios::binary);
+
     char bytes[2];
     while (input.read(bytes, 2)) {
         int numero = (unsigned char)(bytes[0]) << 8 | (unsigned char)(bytes[1]);
         comprimido.push_back(numero);
     }
+
     input.close();
     return comprimido;
 }
 
 string descomprimir(const vector<int>& comprimido) {
     unordered_map<int, string> dictionary;
+
+    // creamos el diccionario con todo ascii posible
     for (int i = 0; i < 256; ++i) {
         dictionary[i] = string(1, char(i));
     }
@@ -123,6 +145,8 @@ string descomprimir(const vector<int>& comprimido) {
         descomprimido = w;
     }
 
+    // si ya está en el diccionario, lo desconvertimos directamente
+    // si no, lo creamos con el último w + el primer caracter de la entrada
     for (size_t i = 1; i < comprimido.size(); ++i) {
         string entry;
         if (dictionary.count(comprimido[i])) {
@@ -141,9 +165,15 @@ string descomprimir(const vector<int>& comprimido) {
     return descomprimido;
 }
 
-// Función de descifrado Vigenere
-void descifrarVigenere(string& data, const string& clave) {
-    int dataLen = data.length(), claveLen = clave.length();
+// ------------------------------------------------------
+
+// descifrado Vigenere
+void desencriptarVigenere(string& data, const string& clave) {
+    int dataLen = data.length();
+    int claveLen = clave.length();
+
+    // si en el otro le sumamos, en este le restamos
+    // sumamos 256 por si queda negativo, y hacemos el módulo por si nos pasamos
     for (int i = 0; i < dataLen; ++i) {
         data[i] = (data[i] - clave[i % claveLen] + 256) % 256;
     }
