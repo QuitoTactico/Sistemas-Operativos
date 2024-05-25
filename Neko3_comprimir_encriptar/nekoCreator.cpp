@@ -9,7 +9,7 @@
 
 using namespace std;
 
-// encriptamos con Vigenere y luego comprimimos con LZW
+// comprimimos con LZW y luego encriptamos con Vigenere
 
 // #bytes:  tipo:   descripción
 
@@ -138,16 +138,25 @@ int main(int argc, char* argv[]) {
     // convertimos el stringstream a string, fué mucho más fácil usar el stringstream
     string fileContent = buffer.str();
 
-    // ciframos el contenido del archivo
-    encriptarVigenere(fileContent, clave);
-
-    // comprimimos el contenido del archivo cifrado
+    // comprimimos el contenido del archivo
     vector<int> comprimido = comprimir(fileContent);
 
-    // guardamos el archivo comprimido
-    guardar_comprimido(comprimido, nombreNeko);
+    // convertimos el comprimido a string para cifrar
+    string comprimidoStr(comprimido.size() * 2, '\0');
+    for (size_t i = 0; i < comprimido.size(); ++i) {
+        comprimidoStr[2 * i] = (comprimido[i] >> 8) & 0xFF;
+        comprimidoStr[2 * i + 1] = comprimido[i] & 0xFF;
+    }
 
-    cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado, cifrado y almacenado en [" << nombreNeko << "]" << endl;
+    // ciframos el contenido comprimido
+    encriptarVigenere(comprimidoStr, clave);
+
+    // guardamos el archivo cifrado y comprimido
+    ofstream output(nombreNeko, ios::binary);
+    output.write(comprimidoStr.data(), comprimidoStr.size());
+    output.close();
+
+    cerr << "\nEl archivo [" << nombreFoto << "] se ha comprimido, encriptado y almacenado en [" << nombreNeko << "]" << endl;
 
     return 0;
 }
@@ -200,7 +209,7 @@ void guardar_comprimido(const vector<int>& comprimido, const string& archivo) {
 
 // ------------------------------------------------------
 
-// cifrado con Vigenere
+// encriptado con Vigenere
 void encriptarVigenere(string& data, const string& clave) {
     int dataLen = data.length();
     int claveLen = clave.length();

@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// descomprimimos con LZW y luego desencriptamos con Vigenere
+// desencriptamos con Vigenere y luego descomprimimos con LZW
 
 // #bytes:  tipo:   descripción
 
@@ -40,12 +40,23 @@ int main(int argc, char* argv[]) {
     const char* nombreFoto = argv[2];
     string clave = argv[3];
 
-    // leemos y descomprimimos el archivo comprimido
-    vector<int> comprimido = leer_comprimido(nombreNeko);
-    string descomprimido = descomprimir(comprimido);
+    // leemos el archivo cifrado y comprimido
+    ifstream input(nombreNeko, ios::binary);
+    string cifradoStr((istreambuf_iterator<char>(input)), istreambuf_iterator<char>());
+    input.close();
 
-    // desciframos el contenido del archivo
-    desencriptarVigenere(descomprimido, clave);
+    // desciframos el contenido
+    desencriptarVigenere(cifradoStr, clave);
+
+    // convertimos el string descifrado a vector<int> para descomprimir
+    vector<int> comprimido(cifradoStr.size() / 2);
+    for (size_t i = 0; i < comprimido.size(); ++i) {
+        comprimido[i] = (static_cast<unsigned char>(cifradoStr[2 * i]) << 8) |
+                        static_cast<unsigned char>(cifradoStr[2 * i + 1]);
+    }
+
+    // descomprimimos el archivo descifrado
+    string descomprimido = descomprimir(comprimido);
 
     // convertimos el string descomprimido y descifrado a un stringstream para facilitar la lectura binaria
     stringstream buffer(descomprimido);
@@ -107,7 +118,7 @@ int main(int argc, char* argv[]) {
     cout << "Abreviación: " << abreviacion << endl;
     cout << "Descripción: " << descripcion << endl;
 
-    cerr << "\nLa foto recibida de [" << nombreNeko << "] se ha almacenado en [" << nombreFoto << "]" << endl;
+    cerr << "\nLa foto recibida de [" << nombreNeko << "] se ha desencriptado, descomprimido y almacenado en [" << nombreFoto << "]" << endl;
 
     return 0;
 }
@@ -133,7 +144,7 @@ string descomprimir(const vector<int>& comprimido) {
     unordered_map<int, string> dictionary;
 
     // creamos el diccionario con todo ascii posible
-    for (int i = 0; i < 256; ++i) {
+    for (int i = 0;  i < 256; ++i) {
         dictionary[i] = string(1, char(i));
     }
 
@@ -167,14 +178,14 @@ string descomprimir(const vector<int>& comprimido) {
 
 // ------------------------------------------------------
 
-// descifrado Vigenere
+// desencriptado Vigenere
 void desencriptarVigenere(string& data, const string& clave) {
     int dataLen = data.length();
     int claveLen = clave.length();
 
     // si en el otro le sumamos, en este le restamos
     // sumamos 256 por si queda negativo, y hacemos el módulo por si nos pasamos
-    for (int i = 0; i < dataLen; ++i) {
+    for (int i = 0;  i < dataLen; ++i) {
         data[i] = (data[i] - clave[i % claveLen] + 256) % 256;
     }
 }

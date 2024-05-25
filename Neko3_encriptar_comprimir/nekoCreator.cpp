@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
     // guardamos el archivo comprimido
     guardar_comprimido(comprimido, nombreNeko);
 
-    cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado, cifrado y almacenado en [" << nombreNeko << "]" << endl;
+    cerr << "\nEl archivo [" << nombreFoto << "] se ha encriptado, comprimido y almacenado en [" << nombreNeko << "]" << endl;
 
     return 0;
 }
@@ -200,7 +200,7 @@ void guardar_comprimido(const vector<int>& comprimido, const string& archivo) {
 
 // ------------------------------------------------------
 
-// cifrado con Vigenere
+// encriptado con Vigenere
 void encriptarVigenere(string& data, const string& clave) {
     int dataLen = data.length();
     int claveLen = clave.length();

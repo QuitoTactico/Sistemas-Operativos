@@ -107,7 +107,7 @@ int main(int argc, char* argv[]) {
     cout << "Abreviación: " << abreviacion << endl;
     cout << "Descripción: " << descripcion << endl;
 
-    cerr << "\nLa foto recibida de [" << nombreNeko << "] se ha almacenado en [" << nombreFoto << "]" << endl;
+    cerr << "\nLa foto recibida de [" << nombreNeko << "] se ha descomprimido, desecriptado y almacenado en [" << nombreFoto << "]" << endl;
 
     return 0;
 }
@@ -167,7 +167,7 @@ string descomprimir(const vector<int>& comprimido) {
 
 // ------------------------------------------------------
 
-// descifrado Vigenere
+// desencriptado Vigenere
 void desencriptarVigenere(string& data, const string& clave) {
     int dataLen = data.length();
     int claveLen = clave.length();
