@@ -1,59 +1,63 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <unordered_map>
+#include "editor.h"
 
-// función de compresión usando LZ98
-std::vector<std::pair<int, char>> comprimir(const std::string& buffer) {
-    std::vector<std::pair<int, char>> compressed;
+void mostrarDiccionario(const std::unordered_map<std::string, int>& dictionary) {
+    std::vector<std::string> dictionaryReverse(dictionary.size());
+    for (const auto& entry : dictionary) {
+        dictionaryReverse[entry.second] = entry.first;
+    }
+
+    for (size_t i = 0; i < dictionaryReverse.size(); ++i) {
+        if (!dictionaryReverse[i].empty()) {
+            std::cout << "Indice: " << i << ", Valor: " << dictionaryReverse[i] << std::endl;
+        }
+    }
+}
+
+std::vector<int> comprimir(const std::string& texto) {
     std::unordered_map<std::string, int> dictionary;
-    int dictSize = 256;
+    for (int i = 0; i < 256; ++i) {
+        dictionary[std::string(1, char(i))] = i;
+    }
 
     std::string w;
-    for (char c : buffer) {
+    std::vector<int> comprimido;
+    int dict_size = 256;
+
+    for (char c : texto) {
         std::string wc = w + c;
-        if (dictionary.find(wc) != dictionary.end()) {
+        if (dictionary.count(wc)) {
             w = wc;
         } else {
-            if (!w.empty()) {
-                compressed.push_back(std::make_pair(dictionary[w], c));
-            }
-            dictionary[wc] = dictSize++;
+            comprimido.push_back(dictionary[w]);
+            dictionary[wc] = dict_size++;
             w = std::string(1, c);
         }
     }
 
     if (!w.empty()) {
-        compressed.push_back(std::make_pair(dictionary[w], '\0'));
+        comprimido.push_back(dictionary[w]);
     }
 
-    return compressed;
+    mostrarDiccionario(dictionary);
+
+    return comprimido;
 }
 
-// función para guardar el texto comprimido en un archivo binario
-void guardar_comprimido(const std::string& buffer, const std::string& archivo) {
-    // llamamos a la función de compresión
-    std::vector<std::pair<int, char>> compressedBuffer = comprimir(buffer);
-
-    std::ofstream outfile(archivo, std::ios::binary);
-    if (outfile.is_open()) {
-        for (const auto& entry : compressedBuffer) {
-            outfile.write(reinterpret_cast<const char*>(&entry.first), sizeof(int));
-            outfile.write(&entry.second, sizeof(char));
-        }
-        outfile.close();
-        std::cout << "Archivo guardado de forma comprimida." << std::endl;
-    } else {
-        std::cerr << "Error al abrir el archivo para escritura." << std::endl;
+void guardar_comprimido(const std::vector<int>& comprimido, const std::string& archivo) {
+    std::ofstream output(archivo, std::ios::binary);
+    for (int numero : comprimido) {
+        output.put(char((numero >> 8) & 0xFF));
+        output.put(char(numero & 0xFF));
     }
+    output.close();
+    std::cout << "Archivo guardado de forma comprimida." << std::endl;
 }
 
+/*
 int main() {
-    std::string buffer = "HOLAAAAAAAAAAAAAAAAAaaaaaaaaaa soy Esteban aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-
-    // llamamos a la función para guardar el texto comprimido
-    guardar_comprimido(buffer, "miau.bin");
-
+    std::string texto = "Eclesiastes 33 de eclesiastes digo yo, el yo que soy, el yo que fui, el yo que seré.";
+    auto comprimido = comprimir(texto);
+    guardar_comprimido(comprimido, "miau.bin");
     return 0;
 }
+*/

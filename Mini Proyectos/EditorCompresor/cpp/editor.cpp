@@ -1,3 +1,4 @@
+/*g++ editor.cpp compresor.cpp descompresor.cpp -lncurses -o editor*/
 #include <ncurses.h> //sudo apt-get install libncurses5-dev libncursesw5-dev
 #include "editor.h"
 

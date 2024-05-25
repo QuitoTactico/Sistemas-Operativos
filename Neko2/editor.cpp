@@ -1,118 +1,89 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <cctype>
-#include <unordered_map>
-#include <sstream>
+/*g++ editor.cpp compresor.cpp descompresor.cpp -lncurses -o editor*/
+#include <ncurses.h> //sudo apt-get install libncurses5-dev libncursesw5-dev
+#include "editor.h"
 
-// prototipos de las funciones definidas en descompresor.cpp y compresor.cpp
-std::string descomprimir(const std::vector<std::pair<int, char>>& compressed);
-std::vector<std::pair<int, char>> leer_comprimido(const std::string& archivo);
-void guardar_comprimido(const std::string& buffer, const std::string& archivo);
-
-// función principal que permite editar el buffer
-void editar_buffer(std::string& buffer) {
-    std::vector<std::string> lines;
-    std::string input;
-    int cursorRow = 0;
-    int cursorCol = 0;
+void editar_buffer(WINDOW* win, std::string& buffer) {
+    int ch;
+    int row = 0;
+    int col = buffer.length();
+    int actual = buffer.length();
     bool running = true;
 
-    // dividimos el buffer en líneas
-    std::istringstream iss(buffer);
-    std::string line;
-    while (std::getline(iss, line)) {
-        lines.push_back(line);
-    }
-
-    // bucle principal
     while (running) {
-        // imprimimos el buffer
-        for (int i = 0; i < lines.size(); ++i) {
-            if (i == cursorRow) {
-                std::cout << "> ";
-            } else {
-                std::cout << "  ";
-            }
-            std::cout << lines[i] << std::endl;
-        }
+        wclear(win);
+        mvwprintw(win, 0, 0, "%s", buffer.c_str()); // imprimimos el buffer actual
+        wmove(win, row, col);  // movemos el cursor a la posición actual
 
-        // mostramos mensaje de instrucciones
-        std::cout << "Comandos: Ctrl+S (Guardar), Ctrl+X (Salir)" << std::endl;
+        ch = wgetch(win);
+        switch (ch) {
+            case 24:  // ctrl-X para guardar y salir
+                {
+                    char archivo[80];
+                    echo();
+                    mvwprintw(win, row + 1, 0, "Nombre del archivo a guardar: ");
+                    wrefresh(win);
+                    wgetstr(win, archivo);
+                    noecho();
 
-        // leemos entrada del usuario
-        std::getline(std::cin, input);
-
-        // procesamos entrada del usuario
-        if (input.size() > 0 && input[0] == '\x1b') { // control character (escape sequence)
-            if (input.size() > 1 && input[1] == 'S') { // Ctrl+S para guardar
-                // llamamos a la función para guardar el buffer
-                guardar_comprimido(buffer, "archivo_comprimido.bin");
-            } else if (input.size() > 1 && input[1] == 'X') { // Ctrl+X para salir
+                    endwin();
+                    std::vector<int> comprimido = comprimir(buffer);
+                    guardar_comprimido(comprimido, archivo);
+                }
+                
                 running = false;
-            }
-        } else { // editamos el texto
-            if (input == "UP") {
-                if (cursorRow > 0) {
-                    --cursorRow;
+                break;
+
+            case KEY_BACKSPACE:
+            case 127:
+                if (actual > 0) {
+                    buffer.erase(actual - 1, 1);
+                    actual--;
+                    if (col > 0) {
+                        col--;
+                    } else {
+                        row--;
+                        col = buffer.find_last_of('\n', actual) + 1;
+                    }
                 }
-            } else if (input == "DOWN") {
-                if (cursorRow < lines.size() - 1) {
-                    ++cursorRow;
-                }
-            } else if (input == "LEFT") {
-                if (cursorCol > 0) {
-                    --cursorCol;
-                }
-            } else if (input == "RIGHT") {
-                if (cursorCol < lines[cursorRow].size()) {
-                    ++cursorCol;
-                }
-            } else if (input == "INSERT") {
-                lines[cursorRow].insert(cursorCol, " ");
-                ++cursorCol;
-            } else if (input == "DELETE") {
-                if (cursorCol < lines[cursorRow].size()) {
-                    lines[cursorRow].erase(cursorCol, 1);
-                }
-            } else if (input == "NEWLINE") {
-                lines.insert(lines.begin() + cursorRow + 1, lines[cursorRow].substr(cursorCol));
-                lines[cursorRow] = lines[cursorRow].substr(0, cursorCol);
-                ++cursorRow;
-                cursorCol = 0;
-            } else if (!input.empty() && std::isprint(input[0])) {
-                lines[cursorRow].insert(cursorCol, input);
-                ++cursorCol;
-            }
+                break;
+            case '\n':
+                buffer.insert(actual, 1, '\n');
+                row++;
+                col = 0;
+                actual++;
+                break;
+            default:
+                buffer.insert(buffer.begin() + actual, ch);
+                actual++;
+                col++;
+                break;
         }
-
-        // limpiamos la pantalla
-        std::cout << "\x1b[2J";
-        std::cout << "\x1b[H";
-    }
-
-    // reconstruimos el buffer
-    buffer.clear();
-    for (const std::string& line : lines) {
-        buffer += line + "\n";
     }
 }
 
+
 int main() {
     std::string buffer;
+    char opcion;
 
     std::cout << "¿Desea abrir un archivo existente (S/N)? ";
-    char opcion;
     std::cin >> opcion;
 
-    if (std::toupper(opcion) == 'S') {
-        // llamamos a la función para descomprimir el archivo
-        buffer = descomprimir(leer_comprimido("archivo_comprimido.bin"));
+    if (opcion == 'S' || opcion == 's') {
+        char archivo[80];
+        std::cout << "Nombre del archivo a abrir: ";
+        std::cin >> archivo;
+        std::vector<int> comprimido = leer_comprimido(archivo);
+        buffer = descomprimir(comprimido);
     }
 
-    // llamamos a la función para editar el buffer
-    editar_buffer(buffer);
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
 
+    editar_buffer(stdscr, buffer);
+
+    //endwin();
     return 0;
 }

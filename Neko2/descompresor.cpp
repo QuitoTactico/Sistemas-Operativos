@@ -1,69 +1,54 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <unordered_map>
+#include "editor.h"
 
-// leemos el archivo comprimido para obtener la secuencia comprimida
-std::vector<std::pair<int, char>> leer_comprimido(const std::string& archivo) {
-    std::ifstream infile(archivo, std::ios::binary);
-    std::vector<std::pair<int, char>> compressedBuffer;
-    if (infile.is_open()) {
-        int index;
-        char character;
-        while (infile.read(reinterpret_cast<char*>(&index), sizeof(int)) && infile.read(&character, sizeof(char))) {
-            compressedBuffer.push_back(std::make_pair(index, character));
-        }
-        infile.close();
-    } else {
-        std::cerr << "Error al abrir el archivo para lectura." << std::endl;
+std::vector<int> leer_comprimido(const std::string& archivo) {
+    std::vector<int> comprimido;
+    std::ifstream input(archivo, std::ios::binary);
+    char bytes[2];
+    while (input.read(bytes, 2)) {
+        int numero = (unsigned char)(bytes[0]) << 8 | (unsigned char)(bytes[1]);
+        comprimido.push_back(numero);
     }
-    return compressedBuffer;
+    input.close();
+    return comprimido;
 }
 
-// función para descomprimir la secuencia comprimida
-std::string descomprimir(const std::vector<std::pair<int, char>>& compressed) {
+std::string descomprimir(const std::vector<int>& comprimido) {
     std::unordered_map<int, std::string> dictionary;
-    int dictSize = 256;
-
-    // Inicializamos el diccionario con caracteres ASCII extendidos
     for (int i = 0; i < 256; ++i) {
-        dictionary[i] = std::string(1, static_cast<char>(i));
+        dictionary[i] = std::string(1, char(i));
     }
 
-    std::string descomprimido;
-    for (const auto& entry : compressed) {
-        int index = entry.first;
-        char character = entry.second;
+    std::string descomprimido, w;
+    int dict_size = 256;
 
-        std::string str;
-        if (dictionary.find(index) != dictionary.end()) {
-            str = dictionary[index];
-        } else if (index == dictSize) {
-            str = dictionary[index - 1] + character;
+    if (!comprimido.empty()) {
+        w = dictionary[comprimido[0]];
+        descomprimido = w;
+    }
+
+    for (size_t i = 1; i < comprimido.size(); ++i) {
+        std::string entry;
+        if (dictionary.count(comprimido[i])) {
+            entry = dictionary[comprimido[i]];
+        } else if (comprimido[i] == dict_size) {
+            entry = w + w[0];
         } else {
             throw std::runtime_error("Error en la descompresión: índice fuera de rango.");
         }
 
-        // Construimos la cadena descomprimida
-        descomprimido += str;
-
-        // Añadimos al diccionario la nueva cadena
-        dictionary[dictSize++] = dictionary[index] + str[0];
+        descomprimido += entry;
+        dictionary[dict_size++] = w + entry[0];
+        w = entry;
     }
 
     return descomprimido;
 }
 
+/*
 int main() {
-    // leemos el archivo comprimido
-    std::vector<std::pair<int, char>> compressedBuffer = leer_comprimido("miau.bin");
-
-    // descomprimimos la secuencia comprimida
-    std::string descomprimido = descomprimir(compressedBuffer);
-    
-    // nos traen el texto descomprimido
+    auto comprimido = leer_comprimido("miau.bin");
+    std::string descomprimido = descomprimir(comprimido);
     std::cout << "Texto descomprimido: " << descomprimido << std::endl;
-
     return 0;
 }
+*/
