@@ -12,19 +12,26 @@ using namespace std;
 vector<int> leer_comprimido(const string& archivo);
 string descomprimir(const vector<int>& comprimido);
 
+// Función de descifrado Vigenere
+void descifrarVigenere(string& data, const string& clave);
+
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_crear.png>" << endl;
+    if (argc != 4) {
+        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_crear.png> <clave>" << endl;
         return 1;
     }
     const char* nombreNeko = argv[1];
     const char* nombreFoto = argv[2];
+    string clave = argv[3];
 
     // Leer y descomprimir el archivo comprimido
     vector<int> comprimido = leer_comprimido(nombreNeko);
     string descomprimido = descomprimir(comprimido);
 
-    // Convertimos la string descomprimida a un stringstream para facilitar la lectura binaria
+    // Descifrar el contenido del archivo
+    descifrarVigenere(descomprimido, clave);
+
+    // Convertimos la string descomprimida y descifrada a un stringstream para facilitar la lectura binaria
     stringstream buffer(descomprimido);
 
     uint32_t id;
@@ -36,7 +43,7 @@ int main(int argc, char* argv[]) {
     uint16_t descripcionLen;
     string descripcion;
 
-    // Leer los datos del archivo descomprimido
+    // Leer los datos del archivo descomprimido y descifrado
     buffer.read(reinterpret_cast<char*>(&id), 4);
     buffer.read(reinterpret_cast<char*>(&edadSexo), 1);
     edad = edadSexo & 0x7F;
@@ -132,4 +139,12 @@ string descomprimir(const vector<int>& comprimido) {
     }
 
     return descomprimido;
+}
+
+// Función de descifrado Vigenere
+void descifrarVigenere(string& data, const string& clave) {
+    int dataLen = data.length(), claveLen = clave.length();
+    for (int i = 0; i < dataLen; ++i) {
+        data[i] = (data[i] - clave[i % claveLen] + 256) % 256;
+    }
 }

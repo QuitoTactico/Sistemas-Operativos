@@ -12,13 +12,17 @@ using namespace std;
 vector<int> comprimir(const string& texto);
 void guardar_comprimido(const vector<int>& comprimido, const string& archivo);
 
+// Función de cifrado Vigenere
+void cifrarVigenere(string& data, const string& clave);
+
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_ingresar.png>" << endl;
+    if (argc != 4) {
+        cerr << "Uso: " << argv[0] << " <archivo_neko.neko> <foto_a_ingresar.png> <clave>" << endl;
         return 1;
     }
     const char* nombreNeko = argv[1];
     const char* nombreFoto = argv[2];
+    string clave = argv[3];
 
     // ---------------------------------- TOMA DE LOS DATOS ----------------------------------
 
@@ -112,13 +116,16 @@ int main(int argc, char* argv[]) {
     // Convertimos el stringstream a string
     string fileContent = buffer.str();
 
-    // Comprimir el contenido del archivo
+    // Cifrar el contenido del archivo
+    cifrarVigenere(fileContent, clave);
+
+    // Comprimir el contenido del archivo cifrado
     vector<int> comprimido = comprimir(fileContent);
 
     // Guardar el archivo comprimido
     guardar_comprimido(comprimido, nombreNeko);
 
-    cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [" << nombreNeko << "]" << endl;
+    cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado, cifrado y almacenado en [" << nombreNeko << "]" << endl;
 
     return 0;
 }
@@ -159,4 +166,12 @@ void guardar_comprimido(const vector<int>& comprimido, const string& archivo) {
         output.put(char(numero & 0xFF));
     }
     output.close();
+}
+
+// Función de cifrado Vigenere
+void cifrarVigenere(string& data, const string& clave) {
+    int dataLen = data.length(), claveLen = clave.length();
+    for (int i = 0; i < dataLen; ++i) {
+        data[i] = (data[i] + clave[i % claveLen]) % 256;
+    }
 }
