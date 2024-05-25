@@ -2,19 +2,14 @@
 #include <fstream>
 #include <cstdint>
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 using namespace std;
 
-// #bytes: tipo: descripción
-
-// 4: int: ID
-// 1: int: Sexo[7] y Edad [6..0]
-// 1: int: Largo del nombre
-// X: str: Nombre
-// 1: int: Largo de la abreviación
-// X: str: Abreviación
-// 2: int: Largo de la descripción
-// X: str: Descripción
+// Funciones de descompresión
+vector<int> leer_comprimido(const string& archivo);
+string descomprimir(const vector<int>& comprimido);
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -23,106 +18,126 @@ int main(int argc, char* argv[]) {
     }
     const char* nombreFoto = argv[1];
 
-    uint32_t id;
-    uint8_t edadSexo;   uint16_t edad;   bool sexo;   string sexoString;  //Sexo[7] y Edad [6..0].  BITS: SEEEEEEE
-    uint8_t nombreLen;
-    string nombre;
-    uint8_t abreviacionLen;
-    string abreviacion;
-    uint16_t descripcionLen;
-    string descripcion;
+    // Leer y descomprimir el archivo comprimido
+    vector<int> comprimido = leer_comprimido("foto_comprimido.neko");
+    string descomprimido = descomprimir(comprimido);
 
-    ifstream file("foto.neko", ios::binary);
+    // Escribir el archivo descomprimido a un archivo temporal
+    ofstream fileWrite("foto_descomprimido.neko", ios::binary);
+    fileWrite.write(descomprimido.c_str(), descomprimido.size());
+    fileWrite.close();
+
+    // Reabrir el archivo descomprimido para leer los datos
+    ifstream file("foto_descomprimido.neko", ios::binary);
+
     if (file.is_open()) {
-        // ---------------------------------- LECTURA DE LOS DATOS ----------------------------------
+        uint32_t id;
+        uint8_t edadSexo;   uint16_t edad;   bool sexo;   string sexoString;
+        uint8_t nombreLen;
+        string nombre;
+        uint8_t abreviacionLen;
+        string abreviacion;
+        uint16_t descripcionLen;
+        string descripcion;
 
-        //ID
+        // Leer los datos del archivo descomprimido
         file.read(reinterpret_cast<char*>(&id), 4);
+        file.read(reinterpret_cast<char*>(&edadSexo), 1);
+        edad = edadSexo & 0x7F;
+        sexo = edadSexo >> 7;
+        sexoString = sexo ? "Femenino" : "Masculino";
 
-        //EDAD
-        file.read(reinterpret_cast<char*>(&edadSexo), 1);                    // SEEEEEEE
-        edad = edadSexo & 0x7F;  //se queda con los 7 bits menos significativos _EEEEEEE
-        sexo = edadSexo >> 7;    //se queda con el bit más significativo        S_______
-        sexoString = sexo ? "Femenino" : "Masculino";  //si sexo es true|1, entonces es femenino, sino masculino
+        file.read(reinterpret_cast<char*>(&nombreLen), 1);
+        nombre.resize(nombreLen);
+        file.read(&nombre[0], nombreLen);
 
-        //NOMBRE
-        file.read(reinterpret_cast<char*>(&nombreLen), 1); //obtiene el tamaño del string (no es necesariamente el largo,
-                                                           //hay caracteres que ocupan más de un byte)
-        nombre.resize(nombreLen);           //le cambia el tamaño al string para que pueda guardar lo que se lee
-        file.read(&nombre[0], nombreLen);   //le pasa la dirección de memoria del primer elemento del string
-                                            //ya la función se encarga de llenar todas las demás direcciones de memoria
-
-        //ABREVIACIÓN
         file.read(reinterpret_cast<char*>(&abreviacionLen), 1);
         abreviacion.resize(abreviacionLen);
         file.read(&abreviacion[0], abreviacionLen);
 
-        //DESCRIPCIÓN
         file.read(reinterpret_cast<char*>(&descripcionLen), 2);
         descripcion.resize(descripcionLen);
         file.read(&descripcion[0], descripcionLen);
 
-        // ---------------------------------- LECTURA DE LA IMAGEN ----------------------------------
-
-        //movemos el puntero hasta el final del archivo para saber qué tan largo es
+        // Leer la imagen
         file.seekg(0, ios::end);
         int longitud = file.tellg();
-
-        //calculamos la longitud de la imagen (longitud de todo el archivo - longitud de los datos normales)
-        int datosAnteriores = 4+1+1+nombreLen+1+abreviacionLen+2+descripcionLen;
+        int datosAnteriores = 4 + 1 + 1 + nombreLen + 1 + abreviacionLen + 2 + descripcionLen;
         int longitudImagen = longitud - datosAnteriores;
-
-        //movemos el puntero al inicio de la imagen
         file.seekg(datosAnteriores, ios::beg);
-
-        //buffer para guardar la imagen temporalmente
         char* buffer = new char[longitudImagen];
         file.read(buffer, longitudImagen);
-
-        //ya podemos cerrar el archivo .neko
         file.close();
 
-        //abrimos el archivo de la imagen output en modo binario
+        // Escribir la imagen a un archivo
         ofstream foto(nombreFoto, ios::binary);
-
-        // ---------------------------------- ESCRITURA DE LA IMAGEN ----------------------------------
-
-        //si el archivo de la imagen se abrió correctamente, guarda los datos en él
         if (!foto) {
             cerr << "No se pudo abrir el archivo " << nombreFoto << endl;
             delete[] buffer;
             return 1;
-        }
-        else{
-            //tan fácil como escribir la imagen que guardamos en el buffer, en el archivo
+        } else {
             foto.write(buffer, longitudImagen);
-
-            //y cerramos el archivo de la imagen, así como hicimos con el .neko
             foto.close();
-            delete[] buffer; //también liberamos el buffer
+            delete[] buffer;
         }
 
-        // ---------------------------------- IMPRESIÓN DE LOS DATOS ----------------------------------
-
-        //los uint16_t son tratados por cout como enteros, como en ID
-        //pero los uint8_t como en edad son tratados como unsigned char, 
-        //así que toca asegurarse de que se imprima como entero
-        cout << "ID: " << id << endl;  
-        cout << "Edad: " << edad << endl; 
-        cout << "Sexo: " << sexoString << endl;    
+        // Imprimir los datos
+        cout << "ID: " << id << endl;
+        cout << "Edad: " << edad << endl;
+        cout << "Sexo: " << sexoString << endl;
         cout << "Nombre: " << nombre << endl;
         cout << "Abreviación: " << abreviacion << endl;
         cout << "Descripción: " << descripcion << endl;
-        /*podría imprimir la dimensión de la imagen, pero ya que se puede montar cualquier tipo de imagen 
-        (de hecho, cualquier tipo de archivo), no hay forma de saber dónde se ubica la longitud de la imagen 
-        en todos los tipos diferentes de headers que existen. También es trabajo innecesario, 
-        lo importante de nekoReader es recibir y guardar los datos. */
 
-        cerr << "\nLa foto recibida de [foto.neko] se ha almacenado en [" << nombreFoto << "]" << endl;
+        cerr << "\nLa foto recibida de [foto_comprimido.neko] se ha almacenado en [" << nombreFoto << "]" << endl;
     } else {
-        cout << "No se pudo abrir el archivo [foto.neko] o no existe.\nPor favor ubicar el archivo en esta misma ruta y con permisos de lectura." << endl;
-        return 1;
+        cerr << "No se pudo abrir el archivo descomprimido [foto_descomprimido.neko]." << endl;
     }
 
     return 0;
+}
+
+// Funciones de descompresión
+vector<int> leer_comprimido(const string& archivo) {
+    vector<int> comprimido;
+    ifstream input(archivo, ios::binary);
+    char bytes[2];
+    while (input.read(bytes, 2)) {
+        int numero = (unsigned char)(bytes[0]) << 8 | (unsigned char)(bytes[1]);
+        comprimido.push_back(numero);
+    }
+    input.close();
+    return comprimido;
+}
+
+string descomprimir(const vector<int>& comprimido) {
+    unordered_map<int, string> dictionary;
+    for (int i = 0; i < 256; ++i) {
+        dictionary[i] = string(1, char(i));
+    }
+
+    string descomprimido, w;
+    int dict_size = 256;
+
+    if (!comprimido.empty()) {
+        w = dictionary[comprimido[0]];
+        descomprimido = w;
+    }
+
+    for (size_t i = 1; i < comprimido.size(); ++i) {
+        string entry;
+        if (dictionary.count(comprimido[i])) {
+            entry = dictionary[comprimido[i]];
+        } else if (comprimido[i] == dict_size) {
+            entry = w + w[0];
+        } else {
+            throw runtime_error("Error en la descompresión: índice fuera de rango.");
+        }
+
+        descomprimido += entry;
+        dictionary[dict_size++] = w + entry[0];
+        w = entry;
+    }
+
+    return descomprimido;
 }

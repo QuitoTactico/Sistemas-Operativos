@@ -2,19 +2,14 @@
 #include <fstream>
 #include <cstdint>
 #include <string>
-#include "glosario.cpp"
+#include <vector>
+#include <unordered_map>
+
 using namespace std;
 
-// #bytes: tipo: descripción
-
-// 4: int: ID
-// 1: int: Sexo[7] y Edad [6..0]
-// 1: int: Largo del nombre
-// X: str: Nombre
-// 1: int: Largo de la abreviación
-// X: str: Abreviación
-// 2: int: Largo de la descripción
-// X: str: Descripción
+// Funciones de compresión
+vector<int> comprimir(const string& texto);
+void guardar_comprimido(const vector<int>& comprimido, const string& archivo);
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -25,47 +20,40 @@ int main(int argc, char* argv[]) {
 
     // ---------------------------------- TOMA DE LOS DATOS ----------------------------------
 
-    //ID
+    // ID
     uint32_t id;
     cout << "Ingrese el ID: ";
     cin >> id;
     cin.ignore();
 
-    //EDAD  
-    //por cómo funciona cin (lee como caracteres) toca guardarlo como variable uint16_t y convertirlo a uint8_t para guardarlo en .neko 
-    //en nuestro caso, nos saltamos ese paso cuando lo obligamos a guardarse en .neko en un solo byte.
+    // EDAD  
     uint16_t edad;
     cout << "Ingrese la edad: ";
     cin >> edad;
     cin.ignore();
 
-    //SEXO
+    // SEXO
     bool sexo;
     cout << "Ingrese el sexo (0 para masculino, 1 para femenino): ";
     cin >> sexo;
     cin.ignore();
 
-    //almacena la edad y el sexo en un solo byte. Sexo[7] y Edad [6..0].  BITS: 76543210
-    uint8_t edadSexo = (sexo << 7) | (edad & 0x7F);                  //   DIST: SEEEEEEE
+    // Almacena la edad y el sexo en un solo byte
+    uint8_t edadSexo = (sexo << 7) | (edad & 0x7F);
 
-    //NOMBRE
+    // NOMBRE
     string nombre;
     cout << "Ingrese el nombre completo del paciente: ";
     getline(cin, nombre);
     uint8_t nombreLen = nombre.size();
 
-    //ABREVIACIÓN
+    // ABREVIACIÓN
     string abreviacion;
-    cout << "Ingrese la abreviación (o \"ver\" para ver el glosario): ";
+    cout << "Ingrese la abreviación: ";
     getline(cin, abreviacion);
-    if (abreviacion == "ver") {     //por si el usuario quiere ver el glosario de abreviaciones
-        cout << GLOSARIO << endl;
-        cout << "Ingrese la abreviación: ";
-        getline(cin, abreviacion);
-    }
     uint8_t abreviacionLen = abreviacion.size();
 
-    //DESCRIPCIÓN
+    // DESCRIPCIÓN
     string descripcion;
     cout << "Ingrese una descripción más detallada (máximo 65536 caracteres): ";
     getline(cin, descripcion);
@@ -73,62 +61,108 @@ int main(int argc, char* argv[]) {
 
     // ---------------------------------- ESCRITURA DE LOS DATOS ----------------------------------
 
-    //abrimos el archivo .neko en modo binario (es llamado foto.neko por default)
+    // Abrimos el archivo .neko en modo binario (es llamado foto.neko por default)
     ofstream file("foto.neko", ios::binary);
     if (file.is_open()) {  
-        //escribimos todos los datos con sus respectivos tamaños    //bytes: tipo: descripción
-        file.write(reinterpret_cast<char*>(&id), 4);                // 4: int: ID
-        file.write(reinterpret_cast<char*>(&edadSexo), 1);          // 1: int: Sexo[7] y Edad [6..0]. SEEEEEEE
-        file.write(reinterpret_cast<char*>(&nombreLen), 1);         // 1: int: Largo del nombre
-        file.write(nombre.c_str(), nombreLen);                      // X: str: Nombre
-        file.write(reinterpret_cast<char*>(&abreviacionLen), 1);    // 1: int: Largo de la abreviación
-        file.write(abreviacion.c_str(), abreviacionLen);            // X: str: Abreviación
-        file.write(reinterpret_cast<char*>(&descripcionLen), 2);    // 2: int: Largo de la descripción
-        file.write(descripcion.c_str(), descripcionLen);            // X: str: Descripción
+        // Escribimos todos los datos con sus respectivos tamaños
+        file.write(reinterpret_cast<char*>(&id), 4);
+        file.write(reinterpret_cast<char*>(&edadSexo), 1);
+        file.write(reinterpret_cast<char*>(&nombreLen), 1);
+        file.write(nombre.c_str(), nombreLen);
+        file.write(reinterpret_cast<char*>(&abreviacionLen), 1);
+        file.write(abreviacion.c_str(), abreviacionLen);
+        file.write(reinterpret_cast<char*>(&descripcionLen), 2);
+        file.write(descripcion.c_str(), descripcionLen);
 
-        //abrimos el archivo de la imagen en modo binario
+        // Abrimos el archivo de la imagen en modo binario
         ifstream foto(nombreFoto, ios::binary);
 
-        // ---------------------------------- ESCRITURA DE LA IMAGEN ----------------------------------
-
-        //comprobamos si el archivo se abrió correctamente
+        // Comprobamos si el archivo se abrió correctamente
         if (!foto) {
             cerr << nombreFoto << " no existe o no se pudo abrir." << endl;
             return 1;
-        }
-        else{
-            //movemos el puntero al final del archivo
+        } else {
+            // Movemos el puntero al final del archivo
             foto.seekg(0, ios::end);
 
-            //sacamos la longitud del archivo
+            // Sacamos la longitud del archivo
             int longitud = foto.tellg();
 
-            //regresamos el puntero al inicio del archivo
+            // Regresamos el puntero al inicio del archivo
             foto.seekg(0, ios::beg);
 
-            //creamos un buffer para almacenar la imagen temporalmente
+            // Creamos un buffer para almacenar la imagen temporalmente
             char* buffer = new char[longitud];
 
-            //leemos la imagen y la guardamos en el buffer
+            // Leemos la imagen y la guardamos en el buffer
             foto.read(buffer, longitud);
 
-            //podemos cerrar el archivo de la imagen
+            // Podemos cerrar el archivo de la imagen
             foto.close();
 
-            //escribimos la imagen que fué guardada en el buffer, en el archivo .neko
+            // Escribimos la imagen que fue guardada en el buffer, en el archivo .neko
             file.write(buffer, longitud);
 
-            //liberamos el buffer
+            // Liberamos el buffer
             delete[] buffer;
         }
 
-        //éxito para los exitosos
+        // Cerramos el archivo .neko
         file.close();
-        cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto.neko]" << endl;
+
+        // Leer el contenido del archivo binario para comprimirlo
+        ifstream fileRead("foto.neko", ios::binary);
+        string fileContent((istreambuf_iterator<char>(fileRead)), istreambuf_iterator<char>());
+        fileRead.close();
+
+        // Comprimir el contenido del archivo
+        vector<int> comprimido = comprimir(fileContent);
+
+        // Guardar el archivo comprimido
+        guardar_comprimido(comprimido, "foto_comprimido.neko");
+
+        cerr << "\nEl archivo [" << nombreFoto << "] se ha procesado y almacenado en [foto_comprimido.neko]" << endl;
     } else {
-        //fracaso para los fracasados...
-        cout << "No se pudo abrir el archivo [foto.neko]." << endl;
+        cerr << "No se pudo abrir el archivo [foto.neko]." << endl;
     }
 
     return 0;
+}
+
+// Funciones de compresión
+vector<int> comprimir(const string& texto) {
+    unordered_map<string, int> dictionary;
+    for (int i = 0; i < 256; ++i) {
+        dictionary[string(1, char(i))] = i;
+    }
+
+    string w;
+    vector<int> comprimido;
+    int dict_size = 256;
+
+    for (char c : texto) {
+        string wc = w + c;
+        if (dictionary.count(wc)) {
+            w = wc;
+        } else {
+            comprimido.push_back(dictionary[w]);
+            dictionary[wc] = dict_size++;
+            w = string(1, c);
+        }
+    }
+
+    if (!w.empty()) {
+        comprimido.push_back(dictionary[w]);
+    }
+
+    return comprimido;
+}
+
+void guardar_comprimido(const vector<int>& comprimido, const string& archivo) {
+    ofstream output(archivo, ios::binary);
+    for (int numero : comprimido) {
+        output.put(char((numero >> 8) & 0xFF));
+        output.put(char(numero & 0xFF));
+    }
+    output.close();
 }
